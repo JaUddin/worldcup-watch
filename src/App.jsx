@@ -8,6 +8,10 @@ import {
   getCommunityEvents,
   subscribeToVenueCounts,
   subscribeToCheckins,
+  subscribeToReactions,
+  subscribeToAppStats,
+  incrementUserCount,
+  getUserReactions,
   checkIn, checkOut,
   getUserCheckin,
 } from './services/firestore'
@@ -29,10 +33,12 @@ export default function App() {
   const [rsvpMatches, setRsvpMatches] = useState([])
   const [communityEvents, setCommunityEvents] = useState([])
 
-  // Live data from Firestore real-time listeners
-  const [venueCounts, setVenueCounts] = useState({})   // { venueName: rsvpCount }
-  const [checkins, setCheckins] = useState({})          // { venueName: [{ userId, username }] }
-  const [userCurrentCheckin, setUserCurrentCheckin] = useState(null) // where user is checked in
+  const [venueCounts, setVenueCounts] = useState({})
+  const [checkins, setCheckins] = useState({})
+  const [venueReactions, setVenueReactions] = useState({})
+  const [userReactions, setUserReactions] = useState({})
+  const [appStats, setAppStats] = useState({})
+  const [userCurrentCheckin, setUserCurrentCheckin] = useState(null)
 
   const [selectedSchedTeam, setSelectedSchedTeam] = useState(null)
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -47,27 +53,30 @@ export default function App() {
   const [toast, setToast] = useState('')
   const dropdownRef = useRef(null)
   const profileDropdownRef = useRef(null)
+  const newUserTracked = useRef(false)
 
-  // ── Load user data + start real-time listeners ──────────────────
   useEffect(() => {
     if (!user?.uid) return
-
     loadUserData()
     loadCommunityEvents()
-
-    // Real-time listener: RSVP counts for all venues
-    const unsubCounts = subscribeToVenueCounts(setVenueCounts)
-
-    // Real-time listener: who is checked in where
-    const unsubCheckins = subscribeToCheckins(setCheckins)
-
-    // Load user's current check-in
     getUserCheckin(user.uid).then(setUserCurrentCheckin)
+    getUserReactions(user.uid).then(setUserReactions)
 
-    return () => {
-      unsubCounts()
-      unsubCheckins()
+    // Track new users once
+    if (!newUserTracked.current && profile) {
+      const created = profile.createdAt?.toDate?.()
+      if (created && (new Date() - created) < 30000) {
+        incrementUserCount()
+        newUserTracked.current = true
+      }
     }
+
+    const unsubCounts = subscribeToVenueCounts(setVenueCounts)
+    const unsubCheckins = subscribeToCheckins(setCheckins)
+    const unsubReactions = subscribeToReactions(setVenueReactions)
+    const unsubStats = subscribeToAppStats(setAppStats)
+
+    return () => { unsubCounts(); unsubCheckins(); unsubReactions(); unsubStats() }
   }, [user?.uid])
 
   useEffect(() => {
@@ -83,18 +92,14 @@ export default function App() {
       const rsvps = await getUserRsvps(user.uid)
       setRsvpBars(rsvps.filter(r => r.type === 'bar'))
       setRsvpMatches(rsvps.filter(r => r.type === 'match'))
-    } catch (err) {
-      console.error('Error loading RSVPs:', err)
-    }
+    } catch (err) { console.error(err) }
   }
 
   const loadCommunityEvents = async () => {
     try {
       const events = await getCommunityEvents()
       setCommunityEvents(events)
-    } catch (err) {
-      console.error('Error loading events:', err)
-    }
+    } catch (err) { console.error(err) }
   }
 
   const showToast = (msg) => {
@@ -111,14 +116,11 @@ export default function App() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // ── DISCOVER ─────────────────────────────────────────────────────
   const allBars = [
     ...BARS,
     ...communityEvents.map(e => ({
-      name: e.venueName,
-      address: e.address,
-      borough: 'Manhattan',
-      neighborhood: 'Midtown',
+      name: e.venueName, address: e.address,
+      borough: 'Manhattan', neighborhood: 'Midtown',
       team: e.team || 'Open',
       tags: e.vibes || ['Big screens'],
       desc: e.desc || 'Community-submitted watch party.',
@@ -136,11 +138,10 @@ export default function App() {
     return matchQ && matchTeam && matchLoc
   })
 
-  // Sort: venues with people checked in bubble to top, then by RSVP count
   const sorted = [...filtered].sort((a, b) => {
-    const aCheckins = (checkins[a.name] || []).length
-    const bCheckins = (checkins[b.name] || []).length
-    if (bCheckins !== aCheckins) return bCheckins - aCheckins
+    const aC = (checkins[a.name] || []).length
+    const bC = (checkins[b.name] || []).length
+    if (bC !== aC) return bC - aC
     return (venueCounts[b.name] || 0) - (venueCounts[a.name] || 0)
   })
 
@@ -174,9 +175,7 @@ export default function App() {
     }
   }
 
-  // ── CHECK-IN ─────────────────────────────────────────────────────
   const handleCheckIn = async (venueName) => {
-    // Check out of previous venue first if needed
     if (userCurrentCheckin && userCurrentCheckin.venueName !== venueName) {
       await checkOut(user.uid, userCurrentCheckin.venueName)
     }
@@ -191,7 +190,6 @@ export default function App() {
     showToast('Checked out.')
   }
 
-  // ── HOST FORM ────────────────────────────────────────────────────
   const handleSubmitEvent = async (e) => {
     e.preventDefault()
     const form = e.target
@@ -212,24 +210,18 @@ export default function App() {
       document.querySelectorAll('.vibe-sel').forEach(v => v.classList.remove('vibe-sel'))
       showToast('Watch party posted! Now live in Discover.')
       setTimeout(() => setTab('discover'), 1200)
-    } catch (err) {
-      showToast('Error posting event. Please try again.')
-    }
+    } catch (err) { showToast('Error posting event. Please try again.') }
   }
 
-  // ── PROFILE ──────────────────────────────────────────────────────
   const handleSaveProfile = async () => {
     setProfileSaving(true)
     try {
       await updateUserProfile({ username, teamPrefs })
       showToast(`Profile saved! Welcome, ${username}.`)
-    } catch (err) {
-      showToast('Error saving profile. Please try again.')
-    }
+    } catch (err) { showToast('Error saving profile.') }
     setProfileSaving(false)
   }
 
-  // ── SCHEDULE ─────────────────────────────────────────────────────
   const selectedTeamData = TEAMS.find(t => t.name === selectedSchedTeam)
   const matches = selectedSchedTeam
     ? (GROUP_MATCHES[selectedSchedTeam] || [
@@ -241,11 +233,12 @@ export default function App() {
 
   const filteredTeams = TEAMS.filter(t => t.name.toLowerCase().includes(dropdownSearch.toLowerCase()))
   const filteredProfileTeams = TEAMS.filter(t => t.name.toLowerCase().includes(profileDropdownSearch.toLowerCase()))
+  const totalCheckedIn = Object.values(checkins).reduce((s, a) => s + a.length, 0)
 
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: 12 }}>
-        <div style={{ fontSize: 36 }}>⚽</div>
+        <div style={{ fontSize: 40 }}>⚽</div>
         <div style={{ fontSize: 14, color: '#888' }}>Loading...</div>
       </div>
     )
@@ -255,6 +248,7 @@ export default function App() {
 
   return (
     <div className="app">
+      {/* ── TOPBAR ── */}
       <div className="topbar">
         <div className="topbar-row">
           <div>
@@ -286,6 +280,49 @@ export default function App() {
       {/* ── DISCOVER ── */}
       {tab === 'discover' && (
         <div className="tab-content">
+
+          {/* Hero banner */}
+          <div className="hero-banner">
+            <div className="hero-content">
+              <div className="hero-title">World Cup 2026 is coming to NYC 🏆</div>
+              <div className="hero-sub">MetLife Stadium hosts 8 matches including the Final. Find your bar, find your crowd.</div>
+            </div>
+          </div>
+
+          {/* Live app stats */}
+          <div className="app-stats-row">
+            <div className="app-stat">
+              <div className="app-stat-num">{appStats.totalUsers || 0}</div>
+              <div className="app-stat-label">members</div>
+            </div>
+            <div className="app-stat-div" />
+            <div className="app-stat">
+              <div className="app-stat-num">{appStats.totalRsvps || 0}</div>
+              <div className="app-stat-label">RSVPs</div>
+            </div>
+            <div className="app-stat-div" />
+            <div className="app-stat">
+              <div className="app-stat-num" style={{ color: totalCheckedIn > 0 ? '#e53935' : undefined }}>
+                {totalCheckedIn > 0 && <span className="live-dot" style={{ marginRight: 4 }} />}
+                {totalCheckedIn}
+              </div>
+              <div className="app-stat-label">here now</div>
+            </div>
+            <div className="app-stat-div" />
+            <div className="app-stat">
+              <div className="app-stat-num">{sorted.length}</div>
+              <div className="app-stat-label">venues</div>
+            </div>
+          </div>
+
+          {/* Live activity banner */}
+          {totalCheckedIn > 0 && (
+            <div className="live-summary">
+              <span className="live-dot" />
+              {totalCheckedIn} {totalCheckedIn === 1 ? 'person' : 'people'} checked in across NYC right now
+            </div>
+          )}
+
           <div className="filter-bar">
             <select className="filter-select" value={teamFilter} onChange={e => { setTeamFilter(e.target.value); setCurrentPage(1) }}>
               <option value="">All Teams</option>
@@ -297,19 +334,9 @@ export default function App() {
             </select>
           </div>
 
-          {/* Live activity summary */}
-          {Object.values(checkins).some(arr => arr.length > 0) && (
-            <div className="live-summary">
-              <span className="live-dot" style={{ display: 'inline-block', marginRight: 6 }} />
-              {Object.values(checkins).reduce((sum, arr) => sum + arr.length, 0)} people checked in across NYC right now
-            </div>
-          )}
-
-          <div className="info-banner">✓ Sorted by live activity — venues with people checked in appear first.</div>
-
           <div className="section-head">
             <span className="section-title">Watch party venues</span>
-            <span className="section-count">{sorted.length} venues</span>
+            <span className="section-count">{sorted.length} venues · sorted by activity</span>
           </div>
 
           {pageBars.length === 0 && <div className="empty-state">No venues match — try a different filter.</div>}
@@ -322,11 +349,12 @@ export default function App() {
                 bar={{ ...b, teamColor: tc }}
                 rsvpCount={venueCounts[b.name] || 0}
                 checkins={checkins}
-                userCurrentCheckin={userCurrentCheckin}
                 isGoing={hasBarRsvp(b.name)}
                 onToggleRsvp={toggleBarRsvp}
                 onCheckIn={handleCheckIn}
                 onCheckOut={handleCheckOut}
+                venueReactions={venueReactions}
+                userReactions={userReactions}
               />
             )
           })}
@@ -337,16 +365,29 @@ export default function App() {
             <button className="page-btn" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next →</button>
           </div>
 
+          {/* Bar owner CTA */}
+          <div className="owner-cta">
+            <div className="owner-cta-top">
+              <div className="owner-cta-icon">🍺</div>
+              <div>
+                <div className="owner-cta-title">Own or manage a bar?</div>
+                <div className="owner-cta-sub">List your World Cup watch party for free and reach thousands of fans in NYC.</div>
+              </div>
+            </div>
+            <button className="owner-cta-btn" onClick={() => setTab('host')}>List my bar →</button>
+          </div>
+
           <div className="host-banner">
             <div className="host-top">
               <div>
                 <div className="host-title">Know a bar hosting a watch party?</div>
-                <div className="host-sub">Submit it to get it listed here</div>
+                <div className="host-sub">Submit it and help the community find it</div>
               </div>
               <button className="host-btn" onClick={() => setTab('host')}>+ Add</button>
             </div>
             <div className="host-chips">
-              <span className="host-chip">Community submitted</span>
+              <span className="host-chip">Free to list</span>
+              <span className="host-chip">Community driven</span>
               <span className="host-chip">World Cup only</span>
             </div>
           </div>
@@ -452,7 +493,7 @@ export default function App() {
           <div className="host-hero">
             <div className="host-hero-emoji">🏆</div>
             <div className="host-hero-title">Host a Watch Party!</div>
-            <div className="host-hero-sub">You bring the energy, we bring the crowd.</div>
+            <div className="host-hero-sub">You bring the energy, we bring the crowd. List your bar or community event and let NYC find you.</div>
           </div>
           <div className="host-steps">
             {['Fill in your venue', 'Pick the match', 'Set the vibe', 'Go live!'].map((s, i) => (
@@ -513,7 +554,7 @@ export default function App() {
           {userCurrentCheckin && (
             <div className="checkin-status">
               <span className="live-dot" style={{ display: 'inline-block', marginRight: 6 }} />
-              You're checked in at <strong>{userCurrentCheckin.venueName}</strong>
+              Checked in at <strong>{userCurrentCheckin.venueName}</strong>
               <button className="checkout-link" onClick={() => handleCheckOut(userCurrentCheckin.venueName)}>Check out</button>
             </div>
           )}

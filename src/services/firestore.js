@@ -6,7 +6,6 @@ import {
   getDoc,
   getDocs,
   deleteDoc,
-  updateDoc,
   query,
   where,
   orderBy,
@@ -20,25 +19,25 @@ import { db } from '../firebase'
 
 export const addRsvp = async (userId, type, targetName) => {
   const ref = await addDoc(collection(db, 'rsvps'), {
-    userId,
-    type,
-    targetName,
+    userId, type, targetName,
     createdAt: serverTimestamp(),
   })
-  // Increment the venue's RSVP count in real time
   if (type === 'bar') {
-    const countRef = doc(db, 'venueCounts', targetName)
-    await setDoc(countRef, { rsvpCount: increment(1), name: targetName }, { merge: true })
+    await setDoc(doc(db, 'venueCounts', targetName),
+      { rsvpCount: increment(1), name: targetName }, { merge: true })
+    await setDoc(doc(db, 'appStats', 'global'),
+      { totalRsvps: increment(1) }, { merge: true })
   }
   return ref.id
 }
 
 export const removeRsvp = async (rsvpId, type, targetName) => {
   await deleteDoc(doc(db, 'rsvps', rsvpId))
-  // Decrement the venue's RSVP count
   if (type === 'bar') {
-    const countRef = doc(db, 'venueCounts', targetName)
-    await setDoc(countRef, { rsvpCount: increment(-1), name: targetName }, { merge: true })
+    await setDoc(doc(db, 'venueCounts', targetName),
+      { rsvpCount: increment(-1), name: targetName }, { merge: true })
+    await setDoc(doc(db, 'appStats', 'global'),
+      { totalRsvps: increment(-1) }, { merge: true })
   }
 }
 
@@ -48,34 +47,87 @@ export const getUserRsvps = async (userId) => {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }))
 }
 
-// Real-time listener for all venue RSVP counts
 export const subscribeToVenueCounts = (callback) => {
   return onSnapshot(collection(db, 'venueCounts'), (snap) => {
     const counts = {}
-    snap.docs.forEach(d => {
-      counts[d.id] = d.data().rsvpCount || 0
-    })
+    snap.docs.forEach(d => { counts[d.id] = d.data().rsvpCount || 0 })
     callback(counts)
   })
+}
+
+// ─── APP STATS ────────────────────────────────────────────────────
+
+export const incrementUserCount = async () => {
+  await setDoc(doc(db, 'appStats', 'global'),
+    { totalUsers: increment(1) }, { merge: true })
+}
+
+export const subscribeToAppStats = (callback) => {
+  return onSnapshot(doc(db, 'appStats', 'global'), (snap) => {
+    callback(snap.exists() ? snap.data() : {})
+  })
+}
+
+// ─── REACTIONS ────────────────────────────────────────────────────
+
+export const toggleReaction = async (userId, venueName, emoji) => {
+  const reactionId = `${userId}_${venueName}_${emoji}`
+  const ref = doc(db, 'reactions', reactionId)
+  const snap = await getDoc(ref)
+  if (snap.exists()) {
+    await deleteDoc(ref)
+    await setDoc(doc(db, 'venueReactions', `${venueName}_${emoji}`),
+      { venueName, emoji, count: increment(-1) }, { merge: true })
+    return false
+  } else {
+    await setDoc(ref, { userId, venueName, emoji, createdAt: serverTimestamp() })
+    await setDoc(doc(db, 'venueReactions', `${venueName}_${emoji}`),
+      { venueName, emoji, count: increment(1) }, { merge: true })
+    return true
+  }
+}
+
+export const subscribeToReactions = (callback) => {
+  return onSnapshot(collection(db, 'venueReactions'), (snap) => {
+    const reactions = {}
+    snap.docs.forEach(d => {
+      const { venueName, emoji, count } = d.data()
+      if (!reactions[venueName]) reactions[venueName] = {}
+      reactions[venueName][emoji] = count || 0
+    })
+    callback(reactions)
+  })
+}
+
+export const getUserReactions = async (userId) => {
+  const q = query(collection(db, 'reactions'), where('userId', '==', userId))
+  const snap = await getDocs(q)
+  const result = {}
+  snap.docs.forEach(d => {
+    const { venueName, emoji } = d.data()
+    if (!result[venueName]) result[venueName] = []
+    result[venueName].push(emoji)
+  })
+  return result
 }
 
 // ─── CHECK-INS ────────────────────────────────────────────────────
 
 export const checkIn = async (userId, username, venueName) => {
-  const ref = doc(db, 'checkins', `${userId}_${venueName}`)
-  await setDoc(ref, {
-    userId,
-    username,
-    venueName,
+  await setDoc(doc(db, 'checkins', `${userId}_${venueName}`), {
+    userId, username, venueName,
     checkedInAt: serverTimestamp(),
   })
+  await setDoc(doc(db, 'appStats', 'global'),
+    { totalCheckins: increment(1) }, { merge: true })
 }
 
 export const checkOut = async (userId, venueName) => {
   await deleteDoc(doc(db, 'checkins', `${userId}_${venueName}`))
+  await setDoc(doc(db, 'appStats', 'global'),
+    { totalCheckins: increment(-1) }, { merge: true })
 }
 
-// Real-time listener for check-ins at all venues
 export const subscribeToCheckins = (callback) => {
   return onSnapshot(collection(db, 'checkins'), (snap) => {
     const checkins = {}
@@ -99,10 +151,7 @@ export const getUserCheckin = async (userId) => {
 
 export const addComment = async (userId, username, venueName, text) => {
   await addDoc(collection(db, 'comments'), {
-    userId,
-    username,
-    venueName,
-    text,
+    userId, username, venueName, text,
     createdAt: serverTimestamp(),
   })
 }
@@ -111,7 +160,6 @@ export const deleteComment = async (commentId) => {
   await deleteDoc(doc(db, 'comments', commentId))
 }
 
-// Real-time listener for comments on a specific venue
 export const subscribeToComments = (venueName, callback) => {
   const q = query(
     collection(db, 'comments'),
@@ -119,8 +167,7 @@ export const subscribeToComments = (venueName, callback) => {
     orderBy('createdAt', 'desc')
   )
   return onSnapshot(q, (snap) => {
-    const comments = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-    callback(comments)
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
   })
 }
 
