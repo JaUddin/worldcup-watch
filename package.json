@@ -1,0 +1,19 @@
+{
+  "name": "worldcup-watch-nyc",
+  "version": "2.0.0",
+  "description": "NYC World Cup 2026 Watch Party Finder — with Firebase auth and persistent storage",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "firebase": "^10.7.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "vite": "^4.4.0"
+  }
+}
