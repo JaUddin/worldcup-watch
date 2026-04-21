@@ -34,8 +34,13 @@ export const addRsvp = async (userId, type, targetName) => {
 export const removeRsvp = async (rsvpId, type, targetName) => {
   await deleteDoc(doc(db, 'rsvps', rsvpId))
   if (type === 'bar') {
-    await setDoc(doc(db, 'venueCounts', targetName),
-      { rsvpCount: increment(-1), name: targetName }, { merge: true })
+    const countRef = doc(db, 'venueCounts', targetName)
+    const snap = await getDoc(countRef)
+    const current = snap.exists() ? (snap.data().rsvpCount || 0) : 0
+    await setDoc(countRef,
+      { rsvpCount: Math.max(0, current - 1), name: targetName },
+      { merge: true }
+    )
     await setDoc(doc(db, 'appStats', 'global'),
       { totalRsvps: increment(-1) }, { merge: true })
   }
