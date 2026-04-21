@@ -1,0 +1,150 @@
+.ob-screen {
+  position: fixed;
+  inset: 0;
+  background: #1a3d1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+/* Animated background pattern */
+.ob-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(200,164,21,0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255,255,255,0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.ob-card {
+  background: rgba(255,255,255,0.06);
+  border: 0.5px solid rgba(255,255,255,0.15);
+  border-radius: 24px;
+  padding: 36px 28px 28px;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+/* Progress dots */
+.ob-dots {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 36px;
+}
+
+.ob-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  transition: all 0.3s;
+}
+
+.ob-dot.active {
+  width: 24px;
+  border-radius: 4px;
+  background: #c8a415;
+}
+
+.ob-dot.done {
+  background: rgba(200,164,21,0.5);
+}
+
+/* Emoji */
+.ob-content {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.ob-emoji-wrap {
+  margin-bottom: 24px;
+}
+
+.ob-emoji-ring {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 2px solid rgba(200,164,21,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.ob-emoji {
+  font-size: 44px;
+  line-height: 1;
+}
+
+.ob-title {
+  font-size: 22px;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 12px;
+  line-height: 1.3;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.ob-sub {
+  font-size: 15px;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.6;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Actions */
+.ob-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ob-btn-primary {
+  width: 100%;
+  background: #c8a415;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 15px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+
+.ob-btn-primary:hover { opacity: 0.9; }
+
+.ob-btn-skip {
+  width: 100%;
+  background: transparent;
+  color: rgba(255,255,255,0.4);
+  border: none;
+  padding: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.ob-step-label {
+  margin-top: 16px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.3);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}

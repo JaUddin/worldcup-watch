@@ -4,6 +4,11 @@ import { useAuth } from './context/AuthContext'
 import AuthScreen from './components/AuthScreen'
 import BarCard from './components/BarCard'
 import BarPage from './pages/BarPage'
+import Onboarding from './components/Onboarding'
+import MatchCountdown from './components/MatchCountdown'
+import { SkeletonList } from './components/SkeletonCard'
+import NeighborhoodLeaderboard from './components/NeighborhoodLeaderboard'
+import TrendingNow from './components/TrendingNow'
 import {
   addRsvp, removeRsvp, getUserRsvps,
   submitEvent as submitEventToDb,
@@ -22,16 +27,18 @@ import { BARS, TEAMS, GROUP_MATCHES, TEAM_COLORS } from './data'
 import './App.css'
 
 const PER_PAGE = 5
+const ONBOARDING_KEY = 'kickoff_nyc_onboarded'
 
 export default function App() {
-  const { user, profile, loading, logOut } = useAuth()
+  const { user, loading } = useAuth()
 
   return (
     <>
       {loading && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: 12 }}>
-          <div style={{ fontSize: 40 }}>⚽</div>
-          <div style={{ fontSize: 14, color: '#888' }}>Loading...</div>
+        <div className="app-loading">
+          <div className="app-loading-icon">⚽</div>
+          <div className="app-loading-text">Kickoff NYC</div>
+          <div className="app-loading-sub">Loading watch parties...</div>
         </div>
       )}
       {!loading && !user && <AuthScreen />}
@@ -49,11 +56,13 @@ function MainApp() {
   const { user, profile, logOut, updateUserProfile } = useAuth()
   const navigate = useNavigate()
 
+  const [showOnboarding, setShowOnboarding] = useState(false)
   const [tab, setTab] = useState('discover')
   const [search, setSearch] = useState('')
   const [teamFilter, setTeamFilter] = useState('')
   const [locationFilter, setLocationFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [dataLoading, setDataLoading] = useState(true)
 
   const [rsvpBars, setRsvpBars] = useState([])
   const [rsvpMatches, setRsvpMatches] = useState([])
@@ -82,12 +91,29 @@ function MainApp() {
   const profileDropdownRef = useRef(null)
   const newUserTracked = useRef(false)
 
+  // Check if user needs onboarding
+  useEffect(() => {
+    if (user) {
+      const done = localStorage.getItem(ONBOARDING_KEY + '_' + user.uid)
+      if (!done) setShowOnboarding(true)
+    }
+  }, [user])
+
+  const completeOnboarding = () => {
+    localStorage.setItem(ONBOARDING_KEY + '_' + user.uid, '1')
+    setShowOnboarding(false)
+  }
+
   useEffect(() => {
     if (!user?.uid) return
-    loadUserData()
-    loadCommunityEvents()
-    getUserCheckin(user.uid).then(setUserCurrentCheckin)
-    getUserReactions(user.uid).then(setUserReactions)
+    setDataLoading(true)
+
+    Promise.all([
+      loadUserData(),
+      loadCommunityEvents(),
+      getUserCheckin(user.uid).then(setUserCurrentCheckin),
+      getUserReactions(user.uid).then(setUserReactions),
+    ]).then(() => setDataLoading(false))
 
     if (!newUserTracked.current && profile) {
       const created = profile.createdAt?.toDate?.()
@@ -267,14 +293,29 @@ function MainApp() {
 
   return (
     <div className="app">
+      {/* Onboarding overlay */}
+      {showOnboarding && <Onboarding onComplete={completeOnboarding} />}
+
+      {/* ── TOPBAR ── */}
       <div className="topbar">
         <div className="topbar-row">
-          <div>
-            <div className="app-title">WorldCup Watch NYC</div>
-            <div className="app-sub">Summer 2026 — Find your crowd</div>
+          <div className="brand-row">
+            <span className="brand-icon">⚽</span>
+            <div>
+              <div className="app-title">Kickoff NYC</div>
+              <div className="app-sub">World Cup 2026 Watch Parties</div>
+            </div>
           </div>
           <button className="signout-btn" onClick={logOut}>Sign out</button>
         </div>
+
+        {/* Match countdown in topbar */}
+        {tab === 'discover' && (
+          <div style={{ marginBottom: 12 }}>
+            <MatchCountdown />
+          </div>
+        )}
+
         <div className="search-wrap">
           <span className="search-icon">⌕</span>
           <input type="text" placeholder="Search bars, neighborhoods, teams..."
@@ -294,11 +335,6 @@ function MainApp() {
       {/* ── DISCOVER ── */}
       {tab === 'discover' && (
         <div className="tab-content">
-          <div className="hero-banner">
-            <div className="hero-title">World Cup 2026 is coming to NYC 🏆</div>
-            <div className="hero-sub">MetLife Stadium hosts 8 matches including the Final. Find your bar, find your crowd.</div>
-          </div>
-
           <div className="app-stats-row">
             <div className="app-stat">
               <div className="app-stat-num">{appStats.totalUsers || 0}</div>
@@ -319,8 +355,8 @@ function MainApp() {
             </div>
             <div className="app-stat-div" />
             <div className="app-stat">
-              <div className="app-stat-num">{Object.keys(claimedVenues).length}</div>
-              <div className="app-stat-label">claimed bars</div>
+              <div className="app-stat-num">{sorted.length}</div>
+              <div className="app-stat-label">venues</div>
             </div>
           </div>
 
@@ -330,6 +366,18 @@ function MainApp() {
               {totalCheckedIn} {totalCheckedIn === 1 ? 'person' : 'people'} checked in across NYC right now
             </div>
           )}
+
+          {/* Trending Now */}
+          <TrendingNow
+            bars={allBars}
+            checkins={checkins}
+            venueCounts={venueCounts}
+            venueReactions={venueReactions}
+            onNavigate={navigate}
+          />
+
+          {/* Neighborhood Leaderboard */}
+          <NeighborhoodLeaderboard checkins={checkins} venueCounts={venueCounts} />
 
           <div className="filter-bar">
             <select className="filter-select" value={teamFilter} onChange={e => { setTeamFilter(e.target.value); setCurrentPage(1) }}>
@@ -343,37 +391,45 @@ function MainApp() {
           </div>
 
           <div className="section-head">
-            <span className="section-title">Watch party venues</span>
-            <span className="section-count">{sorted.length} venues · sorted by activity</span>
+            <span className="section-title">All watch party venues</span>
+            <span className="section-count">{sorted.length} venues</span>
           </div>
 
-          {pageBars.length === 0 && <div className="empty-state">No venues match — try a different filter.</div>}
+          {/* Skeleton loading or real cards */}
+          {dataLoading ? (
+            <SkeletonList count={3} />
+          ) : (
+            <>
+              {pageBars.length === 0 && <div className="empty-state">No venues match — try a different filter.</div>}
+              {pageBars.map(b => {
+                const tc = TEAM_COLORS[b.team] || TEAM_COLORS.Open
+                return (
+                  <BarCard
+                    key={b.name}
+                    bar={{ ...b, teamColor: tc }}
+                    rsvpCount={venueCounts[b.name] || 0}
+                    checkins={checkins}
+                    isGoing={hasBarRsvp(b.name)}
+                    onToggleRsvp={toggleBarRsvp}
+                    onCheckIn={handleCheckIn}
+                    onCheckOut={handleCheckOut}
+                    venueReactions={venueReactions}
+                    userReactions={userReactions}
+                    claimedVenues={claimedVenues}
+                    onNavigate={navigate}
+                  />
+                )
+              })}
+            </>
+          )}
 
-          {pageBars.map(b => {
-            const tc = TEAM_COLORS[b.team] || TEAM_COLORS.Open
-            return (
-              <BarCard
-                key={b.name}
-                bar={{ ...b, teamColor: tc }}
-                rsvpCount={venueCounts[b.name] || 0}
-                checkins={checkins}
-                isGoing={hasBarRsvp(b.name)}
-                onToggleRsvp={toggleBarRsvp}
-                onCheckIn={handleCheckIn}
-                onCheckOut={handleCheckOut}
-                venueReactions={venueReactions}
-                userReactions={userReactions}
-                claimedVenues={claimedVenues}
-                onNavigate={navigate}
-              />
-            )
-          })}
-
-          <div className="pagination">
-            <button className="page-btn" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>← Prev</button>
-            <span className="page-info">Page {currentPage} of {totalPages}</span>
-            <button className="page-btn" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next →</button>
-          </div>
+          {!dataLoading && (
+            <div className="pagination">
+              <button className="page-btn" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>← Prev</button>
+              <span className="page-info">Page {currentPage} of {totalPages}</span>
+              <button className="page-btn" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next →</button>
+            </div>
+          )}
 
           <div className="owner-cta">
             <div className="owner-cta-top">
@@ -424,10 +480,8 @@ function MainApp() {
               </div>
             ))}
           </div>
-
           <div className="divider" />
           <div className="team-selector-label">Select a team to see their schedule</div>
-
           <div className="custom-select-wrap" ref={dropdownRef}>
             <div className={`custom-select-btn ${dropdownOpen ? 'open' : ''}`} onClick={() => setDropdownOpen(o => !o)}>
               <span className="select-flag">{selectedTeamData ? selectedTeamData.flag : '🌍'}</span>
@@ -455,7 +509,6 @@ function MainApp() {
               </div>
             )}
           </div>
-
           {selectedTeamData && (
             <div>
               <div className="team-header" style={{ background: selectedTeamData.bg }}>

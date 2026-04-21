@@ -1,0 +1,74 @@
+.sk-card {
+  margin: 0 16px 14px;
+  background: #fff;
+  border: 0.5px solid #e0e0e0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Shimmer animation */
+@keyframes shimmer {
+  0% { background-position: -468px 0; }
+  100% { background-position: 468px 0; }
+}
+
+.sk-line, .sk-badge, .sk-stat, .sk-reaction, .sk-tag, .sk-btn {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 936px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 6px;
+}
+
+.sk-top {
+  padding: 14px 14px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.sk-info { flex: 1; }
+.sk-name { height: 16px; width: 65%; margin-bottom: 8px; }
+.sk-address { height: 12px; width: 80%; margin-bottom: 8px; }
+.sk-verified { height: 10px; width: 45%; }
+.sk-badge { width: 64px; height: 26px; border-radius: 20px; flex-shrink: 0; }
+
+.sk-stats {
+  display: flex;
+  gap: 12px;
+  padding: 10px 14px;
+  border-top: 0.5px solid #f5f5f5;
+  border-bottom: 0.5px solid #f5f5f5;
+  background: #fafafa;
+}
+
+.sk-stat { flex: 1; height: 32px; border-radius: 8px; }
+
+.sk-reactions {
+  display: flex;
+  gap: 6px;
+  padding: 10px 14px 6px;
+}
+
+.sk-reaction { width: 48px; height: 30px; border-radius: 20px; }
+
+.sk-tags {
+  display: flex;
+  gap: 6px;
+  padding: 6px 14px 10px;
+}
+
+.sk-tag { height: 22px; border-radius: 6px; }
+.sk-tags .sk-tag:nth-child(1) { width: 70px; }
+.sk-tags .sk-tag:nth-child(2) { width: 90px; }
+.sk-tags .sk-tag:nth-child(3) { width: 60px; }
+
+.sk-footer {
+  border-top: 0.5px solid #f0f0f0;
+  padding: 10px 14px;
+  display: flex;
+  gap: 8px;
+}
+
+.sk-btn { height: 32px; flex: 1; border-radius: 8px; }
+.sk-btn-main { flex: 1.5; }

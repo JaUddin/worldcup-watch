@@ -1,0 +1,96 @@
+.mc-wrap {
+  background: rgba(0,0,0,0.25);
+  border: 0.5px solid rgba(200,164,21,0.3);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin: 0 16px 0;
+}
+
+.mc-label {
+  font-size: 10px;
+  color: #c8a415;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 4px;
+}
+
+.mc-match-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.mc-venue {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 12px;
+}
+
+.mc-timer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mc-unit {
+  text-align: center;
+  flex: 1;
+}
+
+.mc-num {
+  font-size: 24px;
+  font-weight: 500;
+  color: #fff;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+}
+
+.mc-unit-label {
+  font-size: 9px;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 3px;
+}
+
+.mc-sep {
+  font-size: 20px;
+  color: rgba(255,255,255,0.3);
+  font-weight: 300;
+  margin-bottom: 14px;
+}
+
+/* Live variant */
+.mc-live {
+  border-color: rgba(229,57,53,0.5);
+  background: rgba(229,57,53,0.1);
+}
+
+.mc-live-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #ef5350;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mc-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef5350;
+  animation: pulse 1.5s infinite;
+  display: inline-block;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
