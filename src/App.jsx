@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import AuthScreen from './components/AuthScreen'
 import BarCard from './components/BarCard'
+import BarPage from './pages/BarPage'
 import {
   addRsvp, removeRsvp, getUserRsvps,
   submitEvent as submitEventToDb,
@@ -22,7 +24,30 @@ import './App.css'
 const PER_PAGE = 5
 
 export default function App() {
-  const { user, profile, loading, logOut, updateUserProfile } = useAuth()
+  const { user, profile, loading, logOut } = useAuth()
+
+  return (
+    <>
+      {loading && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: 12 }}>
+          <div style={{ fontSize: 40 }}>⚽</div>
+          <div style={{ fontSize: 14, color: '#888' }}>Loading...</div>
+        </div>
+      )}
+      {!loading && !user && <AuthScreen />}
+      {!loading && user && (
+        <Routes>
+          <Route path="/" element={<MainApp />} />
+          <Route path="/bar/:slug" element={<BarPage />} />
+        </Routes>
+      )}
+    </>
+  )
+}
+
+function MainApp() {
+  const { user, profile, logOut, updateUserProfile } = useAuth()
+  const navigate = useNavigate()
 
   const [tab, setTab] = useState('discover')
   const [search, setSearch] = useState('')
@@ -78,10 +103,7 @@ export default function App() {
     const unsubStats = subscribeToAppStats(setAppStats)
     const unsubClaimed = subscribeToClaimedVenues(setClaimedVenues)
 
-    return () => {
-      unsubCounts(); unsubCheckins(); unsubReactions()
-      unsubStats(); unsubClaimed()
-    }
+    return () => { unsubCounts(); unsubCheckins(); unsubReactions(); unsubStats(); unsubClaimed() }
   }, [user?.uid])
 
   useEffect(() => {
@@ -143,7 +165,6 @@ export default function App() {
     return matchQ && matchTeam && matchLoc
   })
 
-  // Claimed bars bubble to top, then by check-ins, then by RSVPs
   const sorted = [...filtered].sort((a, b) => {
     const aClaimed = claimedVenues[a.name] ? 1 : 0
     const bClaimed = claimedVenues[b.name] ? 1 : 0
@@ -244,17 +265,6 @@ export default function App() {
   const filteredProfileTeams = TEAMS.filter(t => t.name.toLowerCase().includes(profileDropdownSearch.toLowerCase()))
   const totalCheckedIn = Object.values(checkins).reduce((s, a) => s + a.length, 0)
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: 12 }}>
-        <div style={{ fontSize: 40 }}>⚽</div>
-        <div style={{ fontSize: 14, color: '#888' }}>Loading...</div>
-      </div>
-    )
-  }
-
-  if (!user) return <AuthScreen />
-
   return (
     <div className="app">
       <div className="topbar">
@@ -267,12 +277,8 @@ export default function App() {
         </div>
         <div className="search-wrap">
           <span className="search-icon">⌕</span>
-          <input
-            type="text"
-            placeholder="Search bars, neighborhoods, teams..."
-            value={search}
-            onChange={e => { setSearch(e.target.value); setCurrentPage(1) }}
-          />
+          <input type="text" placeholder="Search bars, neighborhoods, teams..."
+            value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1) }} />
         </div>
         <div className="tabs">
           {['discover', 'schedule', 'host', 'profile'].map(t => (
@@ -289,10 +295,8 @@ export default function App() {
       {tab === 'discover' && (
         <div className="tab-content">
           <div className="hero-banner">
-            <div className="hero-content">
-              <div className="hero-title">World Cup 2026 is coming to NYC 🏆</div>
-              <div className="hero-sub">MetLife Stadium hosts 8 matches including the Final. Find your bar, find your crowd.</div>
-            </div>
+            <div className="hero-title">World Cup 2026 is coming to NYC 🏆</div>
+            <div className="hero-sub">MetLife Stadium hosts 8 matches including the Final. Find your bar, find your crowd.</div>
           </div>
 
           <div className="app-stats-row">
@@ -360,6 +364,7 @@ export default function App() {
                 venueReactions={venueReactions}
                 userReactions={userReactions}
                 claimedVenues={claimedVenues}
+                onNavigate={navigate}
               />
             )
           })}
@@ -381,7 +386,6 @@ export default function App() {
             <button className="owner-cta-btn" onClick={() => setTab('host')}>List my bar →</button>
           </div>
 
-          {/* Updated text here */}
           <div className="host-banner">
             <div className="host-top">
               <div>
@@ -410,19 +414,13 @@ export default function App() {
             {rsvpBars.map(r => (
               <div key={r.id} className="rsvp-pill">
                 <div><div className="rsvp-pill-name">{r.targetName}</div><div className="rsvp-pill-sub">Venue</div></div>
-                <button className="undo-btn" onClick={async () => {
-                  await removeRsvp(r.id, 'bar', r.targetName)
-                  setRsvpBars(prev => prev.filter(x => x.id !== r.id))
-                }}>Undo</button>
+                <button className="undo-btn" onClick={async () => { await removeRsvp(r.id, 'bar', r.targetName); setRsvpBars(prev => prev.filter(x => x.id !== r.id)) }}>Undo</button>
               </div>
             ))}
             {rsvpMatches.map(r => (
               <div key={r.id} className="rsvp-pill">
                 <div><div className="rsvp-pill-name">{r.targetName}</div><div className="rsvp-pill-sub">Match</div></div>
-                <button className="undo-btn" onClick={async () => {
-                  await removeRsvp(r.id, 'match', r.targetName)
-                  setRsvpMatches(prev => prev.filter(x => x.id !== r.id))
-                }}>Undo</button>
+                <button className="undo-btn" onClick={async () => { await removeRsvp(r.id, 'match', r.targetName); setRsvpMatches(prev => prev.filter(x => x.id !== r.id)) }}>Undo</button>
               </div>
             ))}
           </div>
@@ -498,7 +496,7 @@ export default function App() {
           <div className="host-hero">
             <div className="host-hero-emoji">🏆</div>
             <div className="host-hero-title">Host a Watch Party!</div>
-            <div className="host-hero-sub">You bring the energy, we bring the crowd. List your bar or community event and let NYC find you.</div>
+            <div className="host-hero-sub">You bring the energy, we bring the crowd.</div>
           </div>
           <div className="host-steps">
             {['Fill in your venue', 'Pick the match', 'Set the vibe', 'Go live!'].map((s, i) => (
