@@ -69,28 +69,24 @@ export default function BarCard({
     setReacting(false)
   }
 
-  const handleShare = async () => {
-    // Generate a deep link to this specific bar
-    const barSlug = encodeURIComponent(bar.name)
-    const shareUrl = `${SITE_URL}?bar=${barSlug}`
-    const shareText = `🏆 Watch the World Cup at ${bar.name}\n📍 ${bar.address}\n\nJoin me — find watch parties across NYC:\n${shareUrl}`
+const handleShare = async () => {
+  const shareUrl = 'https://worldcup-watch-parties-nyc.vercel.app'
+  const shareText = `🏆 Watch the World Cup at ${bar.name}\n📍 ${bar.address}\n\nFind watch parties across NYC 👉\n${shareUrl}`
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Watch the World Cup at ${bar.name}`,
-          text: shareText,
-          url: shareUrl,
-        })
-      } catch (err) {
-        // User cancelled share — that's fine
-      }
-    } else {
-      navigator.clipboard.writeText(shareText)
-      setShareCopied(true)
-      setTimeout(() => setShareCopied(false), 2500)
-    }
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'WorldCup Watch NYC',
+        text: shareText,
+        url: shareUrl,
+      })
+    } catch (err) {}
+  } else {
+    navigator.clipboard.writeText(shareText)
+    setShareCopied(true)
+    setTimeout(() => setShareCopied(false), 2500)
   }
+}
 
   const tc = bar.teamColor || { bg: '#f3e5f5', color: '#4a148c' }
 
