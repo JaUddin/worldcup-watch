@@ -10,6 +10,7 @@ import {
   subscribeToCheckins,
   subscribeToReactions,
   subscribeToAppStats,
+  subscribeToClaimedVenues,
   incrementUserCount,
   getUserReactions,
   checkIn, checkOut,
@@ -38,6 +39,7 @@ export default function App() {
   const [venueReactions, setVenueReactions] = useState({})
   const [userReactions, setUserReactions] = useState({})
   const [appStats, setAppStats] = useState({})
+  const [claimedVenues, setClaimedVenues] = useState({})
   const [userCurrentCheckin, setUserCurrentCheckin] = useState(null)
 
   const [selectedSchedTeam, setSelectedSchedTeam] = useState(null)
@@ -62,7 +64,6 @@ export default function App() {
     getUserCheckin(user.uid).then(setUserCurrentCheckin)
     getUserReactions(user.uid).then(setUserReactions)
 
-    // Track new users once
     if (!newUserTracked.current && profile) {
       const created = profile.createdAt?.toDate?.()
       if (created && (new Date() - created) < 30000) {
@@ -75,8 +76,12 @@ export default function App() {
     const unsubCheckins = subscribeToCheckins(setCheckins)
     const unsubReactions = subscribeToReactions(setVenueReactions)
     const unsubStats = subscribeToAppStats(setAppStats)
+    const unsubClaimed = subscribeToClaimedVenues(setClaimedVenues)
 
-    return () => { unsubCounts(); unsubCheckins(); unsubReactions(); unsubStats() }
+    return () => {
+      unsubCounts(); unsubCheckins(); unsubReactions()
+      unsubStats(); unsubClaimed()
+    }
   }, [user?.uid])
 
   useEffect(() => {
@@ -138,7 +143,11 @@ export default function App() {
     return matchQ && matchTeam && matchLoc
   })
 
+  // Claimed bars bubble to top, then by check-ins, then by RSVPs
   const sorted = [...filtered].sort((a, b) => {
+    const aClaimed = claimedVenues[a.name] ? 1 : 0
+    const bClaimed = claimedVenues[b.name] ? 1 : 0
+    if (bClaimed !== aClaimed) return bClaimed - aClaimed
     const aC = (checkins[a.name] || []).length
     const bC = (checkins[b.name] || []).length
     if (bC !== aC) return bC - aC
@@ -248,7 +257,6 @@ export default function App() {
 
   return (
     <div className="app">
-      {/* ── TOPBAR ── */}
       <div className="topbar">
         <div className="topbar-row">
           <div>
@@ -280,8 +288,6 @@ export default function App() {
       {/* ── DISCOVER ── */}
       {tab === 'discover' && (
         <div className="tab-content">
-
-          {/* Hero banner */}
           <div className="hero-banner">
             <div className="hero-content">
               <div className="hero-title">World Cup 2026 is coming to NYC 🏆</div>
@@ -289,7 +295,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Live app stats */}
           <div className="app-stats-row">
             <div className="app-stat">
               <div className="app-stat-num">{appStats.totalUsers || 0}</div>
@@ -310,12 +315,11 @@ export default function App() {
             </div>
             <div className="app-stat-div" />
             <div className="app-stat">
-              <div className="app-stat-num">{sorted.length}</div>
-              <div className="app-stat-label">venues</div>
+              <div className="app-stat-num">{Object.keys(claimedVenues).length}</div>
+              <div className="app-stat-label">claimed bars</div>
             </div>
           </div>
 
-          {/* Live activity banner */}
           {totalCheckedIn > 0 && (
             <div className="live-summary">
               <span className="live-dot" />
@@ -355,6 +359,7 @@ export default function App() {
                 onCheckOut={handleCheckOut}
                 venueReactions={venueReactions}
                 userReactions={userReactions}
+                claimedVenues={claimedVenues}
               />
             )
           })}
@@ -365,7 +370,6 @@ export default function App() {
             <button className="page-btn" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next →</button>
           </div>
 
-          {/* Bar owner CTA */}
           <div className="owner-cta">
             <div className="owner-cta-top">
               <div className="owner-cta-icon">🍺</div>
@@ -377,10 +381,11 @@ export default function App() {
             <button className="owner-cta-btn" onClick={() => setTab('host')}>List my bar →</button>
           </div>
 
+          {/* Updated text here */}
           <div className="host-banner">
             <div className="host-top">
               <div>
-                <div className="host-title">Know a bar hosting a watch party?</div>
+                <div className="host-title">Know a spot or are you hosting a watch party?</div>
                 <div className="host-sub">Submit it and help the community find it</div>
               </div>
               <button className="host-btn" onClick={() => setTab('host')}>+ Add</button>

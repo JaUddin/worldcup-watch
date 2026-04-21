@@ -55,6 +55,51 @@ export const subscribeToVenueCounts = (callback) => {
   })
 }
 
+// ─── BAR CLAIMING ─────────────────────────────────────────────────
+
+// Submit a claim request for a bar
+export const submitBarClaim = async (userId, userEmail, venueName, claimData) => {
+  await addDoc(collection(db, 'claims'), {
+    userId,
+    userEmail,
+    venueName,
+    ownerName: claimData.ownerName,
+    role: claimData.role,
+    contactEmail: claimData.contactEmail,
+    verificationNote: claimData.verificationNote,
+    status: 'pending', // pending, approved, rejected
+    createdAt: serverTimestamp(),
+  })
+}
+
+// Real-time listener for all claim statuses (so UI updates when admin approves)
+export const subscribeToClaimedVenues = (callback) => {
+  const q = query(collection(db, 'claims'), where('status', '==', 'approved'))
+  return onSnapshot(q, (snap) => {
+    const claimed = {}
+    snap.docs.forEach(d => {
+      const data = d.data()
+      claimed[data.venueName] = {
+        ownerName: data.ownerName,
+        contactEmail: data.contactEmail,
+        claimedAt: data.approvedAt,
+      }
+    })
+    callback(claimed)
+  })
+}
+
+// Check if user has already submitted a claim for a venue
+export const getUserClaim = async (userId, venueName) => {
+  const q = query(
+    collection(db, 'claims'),
+    where('userId', '==', userId),
+    where('venueName', '==', venueName)
+  )
+  const snap = await getDocs(q)
+  return snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() }
+}
+
 // ─── APP STATS ────────────────────────────────────────────────────
 
 export const incrementUserCount = async () => {
