@@ -101,7 +101,7 @@ export default function BarPage() {
   const tc = TEAM_COLORS[bar.team] || TEAM_COLORS.Open
   const checkinsHere = checkins[bar.name] || []
   const isClaimed = !!claimedVenues[bar.name]
-  const shareUrl = `https://YOUR-ACTUAL-URL.vercel.app/bar/${slug}`
+  const shareUrl = `https://worldcup-watch-t1s8.vercel.app/bar/${slug}`
 
   const handleShare = async () => {
     if (navigator.share) {

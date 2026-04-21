@@ -16,7 +16,7 @@ const REACTIONS = [
   { emoji: '🍕', label: 'Food' },
 ]
 
-const SITE_URL = 'https://YOUR-ACTUAL-URL.vercel.app'
+const SITE_URL = 'https://worldcup-watch-t1s8.vercel.app'
 
 export default function BarCard({
   bar, rsvpCount, checkins, isGoing,
