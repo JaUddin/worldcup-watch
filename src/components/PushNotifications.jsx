@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext'
 import { savePushSubscription } from '../services/firestore'
 import './PushNotifications.css'
 
-const VAPID_PUBLIC_KEY = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjZkzEFbnVKWTQn-a4oTF-MHng'
+const VAPID_PUBLIC_KEY = 'BBK9fMidN-mgK6FXz37RZ2MVTc1dohCw2G_6ip_65k5sqMMFtbE3VexXiFJK2RUhGFjZJ8B6CYgxtGu6VBrABks'
+
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4)
