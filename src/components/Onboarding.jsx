@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './Onboarding.css'
 
 const STEPS = [
@@ -24,29 +24,37 @@ const STEPS = [
   },
 ]
 
+const SEEN_KEY = 'kickoff_nyc_seen'
+
 export default function Onboarding({ onComplete }) {
+  const isReturning = !!localStorage.getItem(SEEN_KEY)
   const [step, setStep] = useState(0)
   const current = STEPS[step]
   const isLast = step === STEPS.length - 1
 
+  const handleComplete = () => {
+    localStorage.setItem(SEEN_KEY, '1')
+    onComplete()
+  }
+
   return (
     <div className="ob-screen">
-      {/* Skip always available */}
-      <button className="ob-skip-top" onClick={onComplete}>Skip</button>
+      <button className="ob-skip-top" onClick={handleComplete}>Skip</button>
 
       <div className="ob-card">
-        {/* Progress bars */}
-        <div className="ob-dots">
-          {STEPS.map((_, i) => (
-            <div
-              key={i}
-              className={`ob-dot ${i === step ? 'active' : i < step ? 'done' : ''}`}
-              onClick={() => setStep(i)}
-            />
-          ))}
-        </div>
+        {/* Progress bars — only show if new user */}
+        {!isReturning && (
+          <div className="ob-dots">
+            {STEPS.map((_, i) => (
+              <div
+                key={i}
+                className={`ob-dot ${i === step ? 'active' : i < step ? 'done' : ''}`}
+                onClick={() => setStep(i)}
+              />
+            ))}
+          </div>
+        )}
 
-        {/* Content */}
         <div className="ob-content">
           <div className="ob-emoji-wrap">
             <div className="ob-emoji-ring">
@@ -57,10 +65,14 @@ export default function Onboarding({ onComplete }) {
           <div className="ob-sub">{current.sub}</div>
         </div>
 
-        {/* Actions */}
         <div className="ob-actions">
-          {isLast ? (
-            <button className="ob-btn-primary" onClick={onComplete}>
+          {isReturning ? (
+            /* Returning users — just one big enter button */
+            <button className="ob-btn-primary" onClick={handleComplete}>
+              Enter app →
+            </button>
+          ) : isLast ? (
+            <button className="ob-btn-primary" onClick={handleComplete}>
               Let's find my bar →
             </button>
           ) : (
@@ -70,10 +82,11 @@ export default function Onboarding({ onComplete }) {
           )}
         </div>
 
-        <div className="ob-step-label">{step + 1} of {STEPS.length}</div>
+        {!isReturning && (
+          <div className="ob-step-label">{step + 1} of {STEPS.length}</div>
+        )}
       </div>
 
-      {/* Bottom tagline */}
       <div className="ob-tagline">
         MetLife Stadium · 8 matches · World Cup Final 2026
       </div>
