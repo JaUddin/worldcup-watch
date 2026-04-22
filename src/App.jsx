@@ -333,31 +333,21 @@ const toggleTheme = () => setIsDark(d => !d)
       {tab === 'discover' && (
         <div className="tab-content">
           <div className="app-stats-row">
-            <div className="app-stat">
-              <div className={`app-stat-num ${(appStats.totalUsers || 0) === 0 ? 'zero' : ''}`}>
-  {appStats.totalUsers || 0}
+  <div className="app-stat">
+    <div className="app-stat-num">{appStats.totalRsvps || 0}</div>
+    <div className="app-stat-label">RSVPs</div>
+  </div>
+  <div className="app-stat-div" />
+  <div className="app-stat">
+    <div className="app-stat-num" style={{ color: totalCheckedIn > 0 ? '#e53935' : undefined }}>
+      {totalCheckedIn > 0 && <span className="live-dot" style={{ marginRight: 4 }} />}
+      {totalCheckedIn}
+    </div>
+    <div className="app-stat-label">here now</div>
+  </div>
 </div>
-              <div className="app-stat-label">members</div>
-            </div>
-            <div className="app-stat-div" />
-            <div className="app-stat">
-              <div className="app-stat-num">{appStats.totalRsvps || 0}</div>
-              <div className="app-stat-label">RSVPs</div>
-            </div>
-            <div className="app-stat-div" />
-            <div className="app-stat">
-              <div className="app-stat-num" style={{ color: totalCheckedIn > 0 ? '#e53935' : undefined }}>
-                {totalCheckedIn > 0 && <span className="live-dot" style={{ marginRight: 4 }} />}
-                {totalCheckedIn}
-              </div>
-              <div className="app-stat-label">here now</div>
-            </div>
-            <div className="app-stat-div" />
-            <div className="app-stat">
-              <div className="app-stat-num">{Object.keys(claimedVenues).length}</div>
-              <div className="app-stat-label">claimed</div>
-            </div>
-          </div>
+            
+
 
           {totalCheckedIn > 0 && (
             <div className="live-summary">
