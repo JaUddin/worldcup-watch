@@ -35,31 +35,6 @@
   pointer-events: none;
 }
 
-/* Skip button top right */
-.ob-skip-top {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.25);
-  color: rgba(255,255,255,0.85);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 8px 18px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-family: inherit;
-  z-index: 10;
-  transition: all 0.2s;
-  letter-spacing: 0.2px;
-}
-
-.ob-skip-top:hover {
-  background: rgba(255,255,255,0.22);
-  color: #fff;
-  border-color: rgba(255,255,255,0.35);
-}
-
 .ob-card {
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.09);

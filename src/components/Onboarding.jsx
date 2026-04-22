@@ -39,7 +39,7 @@ export default function Onboarding({ onComplete }) {
 
   return (
     <div className="ob-screen">
-      <button className="ob-skip-top" onClick={handleComplete}>Skip</button>
+
 
       <div className="ob-card">
         {/* Progress bars — only show if new user */}
