@@ -161,6 +161,15 @@ const completeOnboarding = () => {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  const [isDark, setIsDark] = useState(() => localStorage.getItem('kickoff_theme') === 'dark')
+
+useEffect(() => {
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
+  localStorage.setItem('kickoff_theme', isDark ? 'dark' : 'light')
+}, [isDark])
+
+const toggleTheme = () => setIsDark(d => !d)
+
   const allBars = [
     ...BARS,
     ...communityEvents.map(e => ({
@@ -283,17 +292,22 @@ const completeOnboarding = () => {
     <div className="app">
       {showOnboarding && <Onboarding onComplete={completeOnboarding} />}
 
-      <div className="topbar">
-        <div className="topbar-row">
-          <div className="brand-row">
-            <span className="brand-icon">⚽</span>
-            <div>
-              <div className="app-title">Kickoff NYC</div>
-              <div className="app-sub">World Cup 2026 Watch Parties</div>
-            </div>
-          </div>
-          <button className="signout-btn" onClick={logOut}>Sign out</button>
-        </div>
+     <div className="topbar">
+  <div className="topbar-row">
+    <div className="brand-row">
+      <span className="brand-icon">⚽</span>
+      <div>
+        <div className="app-title">Kickoff NYC</div>
+        <div className="app-sub">World Cup 2026 Watch Parties</div>
+      </div>
+    </div>
+    <div className="topbar-actions">
+      <button className="theme-toggle" onClick={toggleTheme}>
+        {isDark ? '☀️' : '🌙'}
+      </button>
+      <button className="signout-btn" onClick={logOut}>Sign out</button>
+    </div>
+  </div>
         {tab === 'discover' && (
           <div style={{ marginBottom: 12 }}>
             <MatchCountdown />
