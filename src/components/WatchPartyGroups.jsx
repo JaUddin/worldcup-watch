@@ -25,10 +25,20 @@ export default function WatchPartyGroups() {
     if (!groupName.trim()) return
     setLoading(true)
     try {
-      await createGroup(user.uid, profile?.username || user.email.split('@')[0], groupName.trim(), venueName.trim() || 'TBD')
-      showToast('Group created! Share the code with your crew.')
-      setGroupName(''); setVenueName(''); setMode('list')
-    } catch (err) { console.error(err) }
+      const id = await createGroup(
+        user.uid,
+        profile?.username || user.email.split('@')[0],
+        groupName.trim(),
+        venueName.trim() || 'TBD'
+      )
+      setGroupName('')
+      setVenueName('')
+      setMode('list')
+      showToast('Group created! Tap "Copy invite code" to share with your crew.')
+    } catch (err) {
+      console.error(err)
+      showToast('Error creating group. Please try again.')
+    }
     setLoading(false)
   }
 
@@ -40,8 +50,9 @@ export default function WatchPartyGroups() {
       if (!group) { showToast('Group not found. Check the code and try again.'); setLoading(false); return }
       if (group.memberIds?.includes(user.uid)) { showToast("You're already in this group!"); setLoading(false); return }
       await joinGroup(joinCode.trim(), user.uid, profile?.username || user.email.split('@')[0])
-      showToast(`Joined ${group.name}!`)
-      setJoinCode(''); setMode('list')
+      showToast(`Joined ${group.name}! 🎉`)
+      setJoinCode('')
+      setMode('list')
     } catch (err) { showToast('Error joining group.') }
     setLoading(false)
   }
@@ -53,7 +64,7 @@ export default function WatchPartyGroups() {
 
   const copyCode = (id) => {
     navigator.clipboard.writeText(id)
-    showToast('Group code copied! Share it with your crew.')
+    showToast('Invite code copied! Share it with your crew.')
   }
 
   return (
@@ -110,10 +121,16 @@ export default function WatchPartyGroups() {
           <input className="wpg-input" type="text" placeholder="e.g. Football Factory at Legends"
             value={venueName} onChange={e => setVenueName(e.target.value)} />
           <div className="wpg-form-actions">
-            <button className="wpg-btn-primary" onClick={handleCreate} disabled={loading || !groupName.trim()}>
+            <button
+              className="wpg-btn-primary"
+              onClick={handleCreate}
+              disabled={loading || !groupName.trim()}
+            >
               {loading ? 'Creating...' : 'Create group'}
             </button>
-            <button className="wpg-btn-ghost" onClick={() => setMode('list')}>Cancel</button>
+            <button className="wpg-btn-ghost" onClick={() => { setMode('list'); setGroupName(''); setVenueName('') }}>
+              Cancel
+            </button>
           </div>
         </div>
       )}
@@ -129,7 +146,7 @@ export default function WatchPartyGroups() {
             <button className="wpg-btn-primary" onClick={handleJoin} disabled={loading || !joinCode.trim()}>
               {loading ? 'Joining...' : 'Join group'}
             </button>
-            <button className="wpg-btn-ghost" onClick={() => setMode('list')}>Cancel</button>
+            <button className="wpg-btn-ghost" onClick={() => { setMode('list'); setJoinCode('') }}>Cancel</button>
           </div>
         </div>
       )}

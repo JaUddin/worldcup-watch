@@ -41,6 +41,7 @@ export default function BarCard({
   const isVerified = !bar.isUserEvent
   const barSlug = nameToSlug(bar.name)
   const barUrl = `${SITE_URL}/bar/${barSlug}`
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bar.address)}`
 
   useEffect(() => {
     if (!expanded) return
@@ -69,12 +70,8 @@ export default function BarCard({
 
   const handleShare = async () => {
     if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Watch the World Cup at ${bar.name}`,
-          url: barUrl,
-        })
-      } catch (err) {}
+      try { await navigator.share({ title: `Watch the World Cup at ${bar.name}`, url: barUrl }) }
+      catch (err) {}
     } else {
       navigator.clipboard.writeText(barUrl)
       setShareCopied(true)
@@ -88,6 +85,7 @@ export default function BarCard({
     <>
       <div className={`bar-card ${expanded ? 'expanded' : ''}`}>
 
+        {/* ── TOP ── */}
         <div className="bc-top" onClick={() => setExpanded(e => !e)}>
           <div className="bc-info">
             <div className="bc-name-row">
@@ -109,6 +107,7 @@ export default function BarCard({
           </div>
         </div>
 
+        {/* ── STATS ── */}
         <div className="bc-stats">
           <div className="bc-stat">
             <span className="bc-stat-num">{rsvpCount || 0}</span>
@@ -129,6 +128,7 @@ export default function BarCard({
           </div>
         </div>
 
+        {/* ── REACTIONS ── */}
         <div className="bc-reactions">
           {REACTIONS.map(r => {
             const count = barReactions[r.emoji] || 0
@@ -141,14 +141,15 @@ export default function BarCard({
           })}
         </div>
 
+        {/* ── TAGS ── */}
         <div className="bc-tags">
           {bar.tags.map(t => <span key={t} className="bc-tag">{t}</span>)}
         </div>
 
+        {/* ── EXPANDED ── */}
         {expanded && (
           <div className="bc-expanded-content">
             <div className="bc-desc">{bar.desc}</div>
-
             <div className="bc-review">
               <div className="bc-review-quote">"{bar.review}"</div>
               <div className="bc-review-source">— {bar.reviewSource}</div>
@@ -159,7 +160,7 @@ export default function BarCard({
                 <span>🏆</span>
                 <div>
                   <div className="bc-owner-info-title">Managed by {claimedVenues[bar.name]?.ownerName}</div>
-                  <div className="bc-owner-info-sub">This listing is verified and managed by the bar owner</div>
+                  <div className="bc-owner-info-sub">Verified and managed by the bar owner</div>
                 </div>
               </div>
             )}
@@ -170,7 +171,6 @@ export default function BarCard({
               </button>
             )}
 
-            {/* View full page link */}
             {!bar.isUserEvent && (
               <button className="bc-fullpage-btn" onClick={() => onNavigate(`/bar/${barSlug}`)}>
                 View full bar page →
@@ -218,16 +218,25 @@ export default function BarCard({
           </div>
         )}
 
+        {/* ── FOOTER — now has 4 buttons including Directions ── */}
         <div className="bc-footer">
-          <button className={`bc-checkin-btn ${userCheckedInHere ? 'checked-in' : ''}`}
-            onClick={() => userCheckedInHere ? onCheckOut(bar.name) : onCheckIn(bar.name)}>
-            {userCheckedInHere ? '📍 Here now' : '📍 Check in'}
+          <button
+            className={`bc-checkin-btn ${userCheckedInHere ? 'checked-in' : ''}`}
+            onClick={() => userCheckedInHere ? onCheckOut(bar.name) : onCheckIn(bar.name)}
+          >
+            {userCheckedInHere ? '📍 Here' : '📍 Check in'}
           </button>
+          <a className="bc-maps-btn" href={mapsUrl} target="_blank" rel="noopener noreferrer">
+            🗺 Directions
+          </a>
           <button className="bc-share-btn" onClick={handleShare}>
-            {shareCopied ? '✓ Copied!' : '↗ Share'}
+            {shareCopied ? '✓' : '↗ Share'}
           </button>
-          <button className={`bc-rsvp-btn ${isGoing ? 'going' : ''}`} onClick={() => onToggleRsvp(bar.name)}>
-            {isGoing ? 'Interested ✓' : "I'm interested"}
+          <button
+            className={`bc-rsvp-btn ${isGoing ? 'going' : ''}`}
+            onClick={() => onToggleRsvp(bar.name)}
+          >
+            {isGoing ? '✓ Going' : 'Interested'}
           </button>
         </div>
       </div>
