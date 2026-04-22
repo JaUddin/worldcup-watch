@@ -305,3 +305,29 @@ export const getProfile = async (userId) => {
   const snap = await getDoc(doc(db, 'users', userId))
   return snap.exists() ? snap.data() : null
 }
+
+export const sendGroupMessage = async (groupId, userId, username, text) => {
+  await addDoc(collection(db, 'groupMessages'), {
+    groupId,
+    userId,
+    username,
+    text: text.trim(),
+    createdAt: serverTimestamp(),
+  })
+  await setDoc(doc(db, 'groups', groupId), {
+    lastMessage: text.trim(),
+    lastMessageAt: serverTimestamp(),
+    lastMessageBy: username,
+  }, { merge: true })
+}
+
+export const subscribeToGroupMessages = (groupId, callback) => {
+  const q = query(
+    collection(db, 'groupMessages'),
+    where('groupId', '==', groupId),
+    orderBy('createdAt', 'asc')
+  )
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+  })
+}
