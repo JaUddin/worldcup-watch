@@ -9,6 +9,8 @@ import MatchCountdown from './components/MatchCountdown'
 import { SkeletonList } from './components/SkeletonCard'
 import NeighborhoodLeaderboard from './components/NeighborhoodLeaderboard'
 import TrendingNow from './components/TrendingNow'
+import WatchPartyGroups from './components/WatchPartyGroups'
+import PushNotifications from './components/PushNotifications'
 import {
   addRsvp, removeRsvp, getUserRsvps,
   submitEvent as submitEventToDb,
@@ -31,7 +33,6 @@ const ONBOARDING_KEY = 'kickoff_nyc_onboarded'
 
 export default function App() {
   const { user, loading } = useAuth()
-
   return (
     <>
       {loading && (
@@ -67,7 +68,6 @@ function MainApp() {
   const [rsvpBars, setRsvpBars] = useState([])
   const [rsvpMatches, setRsvpMatches] = useState([])
   const [communityEvents, setCommunityEvents] = useState([])
-
   const [venueCounts, setVenueCounts] = useState({})
   const [checkins, setCheckins] = useState({})
   const [venueReactions, setVenueReactions] = useState({})
@@ -79,19 +79,17 @@ function MainApp() {
   const [selectedSchedTeam, setSelectedSchedTeam] = useState(null)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [dropdownSearch, setDropdownSearch] = useState('')
-
   const [teamPrefs, setTeamPrefs] = useState([])
   const [username, setUsername] = useState('')
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [profileDropdownSearch, setProfileDropdownSearch] = useState('')
   const [profileSaving, setProfileSaving] = useState(false)
-
   const [toast, setToast] = useState('')
+
   const dropdownRef = useRef(null)
   const profileDropdownRef = useRef(null)
   const newUserTracked = useRef(false)
 
-  // Check if user needs onboarding
   useEffect(() => {
     if (user) {
       const done = localStorage.getItem(ONBOARDING_KEY + '_' + user.uid)
@@ -107,7 +105,6 @@ function MainApp() {
   useEffect(() => {
     if (!user?.uid) return
     setDataLoading(true)
-
     Promise.all([
       loadUserData(),
       loadCommunityEvents(),
@@ -123,11 +120,11 @@ function MainApp() {
       }
     }
 
-    const unsubCounts = subscribeToVenueCounts(setVenueCounts)
-    const unsubCheckins = subscribeToCheckins(setCheckins)
+    const unsubCounts    = subscribeToVenueCounts(setVenueCounts)
+    const unsubCheckins  = subscribeToCheckins(setCheckins)
     const unsubReactions = subscribeToReactions(setVenueReactions)
-    const unsubStats = subscribeToAppStats(setAppStats)
-    const unsubClaimed = subscribeToClaimedVenues(setClaimedVenues)
+    const unsubStats     = subscribeToAppStats(setAppStats)
+    const unsubClaimed   = subscribeToClaimedVenues(setClaimedVenues)
 
     return () => { unsubCounts(); unsubCheckins(); unsubReactions(); unsubStats(); unsubClaimed() }
   }, [user?.uid])
@@ -155,10 +152,7 @@ function MainApp() {
     } catch (err) { console.error(err) }
   }
 
-  const showToast = (msg) => {
-    setToast(msg)
-    setTimeout(() => setToast(''), 3000)
-  }
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   useEffect(() => {
     const handler = (e) => {
@@ -203,7 +197,6 @@ function MainApp() {
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE))
   const pageBars = sorted.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE)
-
   const hasBarRsvp = (name) => rsvpBars.some(r => r.targetName === name)
   const hasMatchRsvp = (name) => rsvpMatches.some(r => r.targetName === name)
 
@@ -255,11 +248,8 @@ function MainApp() {
     const vibes = [...form.querySelectorAll('.vibe-sel')].map(v => v.dataset.vibe)
     try {
       await submitEventToDb(user.uid, profile?.username || 'Anonymous', {
-        venueName, address,
-        team: form.team.value || 'Open',
-        match: form.match.value,
-        vibes,
-        desc: form.desc.value.trim(),
+        venueName, address, team: form.team.value || 'Open',
+        match: form.match.value, vibes, desc: form.desc.value.trim(),
       })
       await loadCommunityEvents()
       form.reset()
@@ -293,10 +283,8 @@ function MainApp() {
 
   return (
     <div className="app">
-      {/* Onboarding overlay */}
       {showOnboarding && <Onboarding onComplete={completeOnboarding} />}
 
-      {/* ── TOPBAR ── */}
       <div className="topbar">
         <div className="topbar-row">
           <div className="brand-row">
@@ -308,14 +296,11 @@ function MainApp() {
           </div>
           <button className="signout-btn" onClick={logOut}>Sign out</button>
         </div>
-
-        {/* Match countdown in topbar */}
         {tab === 'discover' && (
           <div style={{ marginBottom: 12 }}>
             <MatchCountdown />
           </div>
         )}
-
         <div className="search-wrap">
           <span className="search-icon">⌕</span>
           <input type="text" placeholder="Search bars, neighborhoods, teams..."
@@ -355,8 +340,8 @@ function MainApp() {
             </div>
             <div className="app-stat-div" />
             <div className="app-stat">
-              <div className="app-stat-num">{sorted.length}</div>
-              <div className="app-stat-label">venues</div>
+              <div className="app-stat-num">{Object.keys(claimedVenues).length}</div>
+              <div className="app-stat-label">claimed</div>
             </div>
           </div>
 
@@ -367,16 +352,7 @@ function MainApp() {
             </div>
           )}
 
-          {/* Trending Now */}
-          <TrendingNow
-            bars={allBars}
-            checkins={checkins}
-            venueCounts={venueCounts}
-            venueReactions={venueReactions}
-            onNavigate={navigate}
-          />
-
-          {/* Neighborhood Leaderboard */}
+          <TrendingNow bars={allBars} checkins={checkins} venueCounts={venueCounts} venueReactions={venueReactions} onNavigate={navigate} />
           <NeighborhoodLeaderboard checkins={checkins} venueCounts={venueCounts} />
 
           <div className="filter-bar">
@@ -395,28 +371,18 @@ function MainApp() {
             <span className="section-count">{sorted.length} venues</span>
           </div>
 
-          {/* Skeleton loading or real cards */}
-          {dataLoading ? (
-            <SkeletonList count={3} />
-          ) : (
+          {dataLoading ? <SkeletonList count={3} /> : (
             <>
               {pageBars.length === 0 && <div className="empty-state">No venues match — try a different filter.</div>}
               {pageBars.map(b => {
                 const tc = TEAM_COLORS[b.team] || TEAM_COLORS.Open
                 return (
-                  <BarCard
-                    key={b.name}
-                    bar={{ ...b, teamColor: tc }}
+                  <BarCard key={b.name} bar={{ ...b, teamColor: tc }}
                     rsvpCount={venueCounts[b.name] || 0}
-                    checkins={checkins}
-                    isGoing={hasBarRsvp(b.name)}
-                    onToggleRsvp={toggleBarRsvp}
-                    onCheckIn={handleCheckIn}
-                    onCheckOut={handleCheckOut}
-                    venueReactions={venueReactions}
-                    userReactions={userReactions}
-                    claimedVenues={claimedVenues}
-                    onNavigate={navigate}
+                    checkins={checkins} isGoing={hasBarRsvp(b.name)}
+                    onToggleRsvp={toggleBarRsvp} onCheckIn={handleCheckIn} onCheckOut={handleCheckOut}
+                    venueReactions={venueReactions} userReactions={userReactions}
+                    claimedVenues={claimedVenues} onNavigate={navigate}
                   />
                 )
               })}
@@ -480,8 +446,10 @@ function MainApp() {
               </div>
             ))}
           </div>
+
           <div className="divider" />
           <div className="team-selector-label">Select a team to see their schedule</div>
+
           <div className="custom-select-wrap" ref={dropdownRef}>
             <div className={`custom-select-btn ${dropdownOpen ? 'open' : ''}`} onClick={() => setDropdownOpen(o => !o)}>
               <span className="select-flag">{selectedTeamData ? selectedTeamData.flag : '🌍'}</span>
@@ -509,6 +477,7 @@ function MainApp() {
               </div>
             )}
           </div>
+
           {selectedTeamData && (
             <div>
               <div className="team-header" style={{ background: selectedTeamData.bg }}>
@@ -615,6 +584,8 @@ function MainApp() {
             </div>
           )}
 
+          <PushNotifications />
+
           <div className="pref-section">
             <div className="pref-label">My team preferences</div>
             <div className="custom-select-wrap" ref={profileDropdownRef}>
@@ -668,6 +639,11 @@ function MainApp() {
                   {rsvpMatches.map(r => <div key={r.id} className="profile-rsvp-item">⚽ {r.targetName}</div>)}
                 </>
             }
+          </div>
+
+          <div className="pref-section">
+            <div className="pref-label">Watch Party Groups</div>
+            <WatchPartyGroups />
           </div>
 
           <button className="save-btn" onClick={handleSaveProfile} disabled={profileSaving}>

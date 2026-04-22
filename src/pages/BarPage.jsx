@@ -7,10 +7,12 @@ import {
   subscribeToReactions, toggleReaction,
   getUserReactions, checkIn, checkOut, getUserCheckin,
   addRsvp, removeRsvp, getUserRsvps,
-  subscribeToClaimedVenues, submitBarClaim, getUserClaim,
+  subscribeToClaimedVenues,
+  subscribeToAtmosphereScores, getUserAtmosphereScore,
 } from '../services/firestore'
 import { BARS, TEAM_COLORS } from '../data'
 import ClaimBarModal from '../components/ClaimBarModal'
+import AtmosphereScore, { AtmosphereDisplay } from '../components/AtmosphereScore'
 import './BarPage.css'
 
 const REACTIONS = [
@@ -21,7 +23,6 @@ const REACTIONS = [
   { emoji: '🍕', label: 'Food' },
 ]
 
-// Convert bar name to URL slug and back
 export const nameToSlug = (name) =>
   name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
@@ -49,30 +50,31 @@ export default function BarPage() {
   const [showClaimModal, setShowClaimModal] = useState(false)
   const [shareCopied, setShareCopied] = useState(false)
   const [reacting, setReacting] = useState(false)
+  const [atmosphereScores, setAtmosphereScores] = useState({})
+  const [userAtmScore, setUserAtmScore] = useState(null)
+
+  const SITE_URL = 'https://worldcup-watch-t1s8.vercel.app'
 
   useEffect(() => {
     if (!bar || !user?.uid) return
-
-    // Real-time listeners
     const unsubComments = subscribeToComments(bar.name, setComments)
     const unsubCheckins = subscribeToCheckins(c => setCheckins(c))
     const unsubCounts = subscribeToVenueCounts(counts => setRsvpCount(counts[bar.name] || 0))
-    const unsubReactions = subscribeToReactions(r => {
-      setVenueReactions(r[bar.name] || {})
-    })
+    const unsubReactions = subscribeToReactions(r => setVenueReactions(r[bar.name] || {}))
     const unsubClaimed = subscribeToClaimedVenues(setClaimedVenues)
+    const unsubAtm = subscribeToAtmosphereScores(s => setAtmosphereScores(s))
 
-    // One-time loads
     getUserReactions(user.uid).then(r => setUserReactions(r[bar.name] || []))
     getUserCheckin(user.uid).then(c => setUserCheckedIn(c?.venueName === bar.name))
     getUserRsvps(user.uid).then(rsvps => {
       const found = rsvps.find(r => r.type === 'bar' && r.targetName === bar.name)
       if (found) { setIsGoing(true); setRsvpDoc(found) }
     })
+    getUserAtmosphereScore(user.uid, bar.name).then(setUserAtmScore)
 
     return () => {
       unsubComments(); unsubCheckins(); unsubCounts()
-      unsubReactions(); unsubClaimed()
+      unsubReactions(); unsubClaimed(); unsubAtm()
     }
   }, [bar?.name, user?.uid])
 
@@ -81,7 +83,6 @@ export default function BarPage() {
       <div className="bp-notfound">
         <div style={{ fontSize: 48 }}>🔍</div>
         <div className="bp-notfound-title">Bar not found</div>
-        <div className="bp-notfound-sub">This venue may have moved or been removed.</div>
         <button className="bp-back-btn" onClick={() => navigate('/')}>← Back to discover</button>
       </div>
     )
@@ -92,7 +93,6 @@ export default function BarPage() {
       <div className="bp-notfound">
         <div style={{ fontSize: 48 }}>⚽</div>
         <div className="bp-notfound-title">Sign in to view this bar</div>
-        <div className="bp-notfound-sub">Create a free account to see check-ins, comments and RSVPs.</div>
         <button className="bp-back-btn" onClick={() => navigate('/')}>Sign in →</button>
       </div>
     )
@@ -101,16 +101,14 @@ export default function BarPage() {
   const tc = TEAM_COLORS[bar.team] || TEAM_COLORS.Open
   const checkinsHere = checkins[bar.name] || []
   const isClaimed = !!claimedVenues[bar.name]
-  const shareUrl = `https://worldcup-watch-t1s8.vercel.app/bar/${slug}`
+  const shareUrl = `${SITE_URL}/bar/${slug}`
+  const atmData = atmosphereScores[bar.name]
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bar.address)}`
 
   const handleShare = async () => {
     if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Watch the World Cup at ${bar.name}`,
-          url: shareUrl,
-        })
-      } catch (err) {}
+      try { await navigator.share({ title: `Watch the World Cup at ${bar.name}`, url: shareUrl }) }
+      catch (err) {}
     } else {
       navigator.clipboard.writeText(shareUrl)
       setShareCopied(true)
@@ -152,8 +150,10 @@ export default function BarPage() {
     e.preventDefault()
     if (!commentText.trim()) return
     setPosting(true)
-    await addComment(user.uid, profile?.username || user.email.split('@')[0], bar.name, commentText.trim())
-    setCommentText('')
+    try {
+      await addComment(user.uid, profile?.username || user.email.split('@')[0], bar.name, commentText.trim())
+      setCommentText('')
+    } catch (err) { console.error(err) }
     setPosting(false)
   }
 
@@ -163,19 +163,17 @@ export default function BarPage() {
       {/* ── HEADER ── */}
       <div className="bp-header">
         <button className="bp-back" onClick={() => navigate('/')}>← Back</button>
-        <div className="bp-header-content">
-          <div className="bp-name-row">
-            <div className="bp-name">{bar.name}</div>
-            {isClaimed && <span className="bp-owner-badge">✓ Owner verified</span>}
-          </div>
-          <div className="bp-address">{bar.address}</div>
-          <div className="bp-verified">
-            {isClaimed ? '🏆 Verified & claimed by owner' : '✓ Verified World Cup venue'}
-          </div>
-          <span className="bp-team-badge" style={{ background: tc.bg, color: tc.color }}>
-            {bar.team === 'Open' ? 'All fans' : bar.team}
-          </span>
+        <div className="bp-name-row">
+          <div className="bp-name">{bar.name}</div>
+          {isClaimed && <span className="bp-owner-badge">✓ Owner verified</span>}
         </div>
+        <div className="bp-address">{bar.address}</div>
+        <div className="bp-verified">
+          {isClaimed ? '🏆 Verified & claimed by owner' : '✓ Verified World Cup venue'}
+        </div>
+        <span className="bp-team-badge" style={{ background: tc.bg, color: tc.color }}>
+          {bar.team === 'Open' ? 'All fans' : bar.team}
+        </span>
       </div>
 
       {/* ── LIVE STATS ── */}
@@ -197,6 +195,15 @@ export default function BarPage() {
           <div className="bp-stat-num">{comments.length}</div>
           <div className="bp-stat-label">comments</div>
         </div>
+        {atmData && (
+          <>
+            <div className="bp-stat-div" />
+            <div className="bp-stat">
+              <div className="bp-stat-num" style={{ color: '#1a3d1a' }}>{atmData.overall?.toFixed(1)}</div>
+              <div className="bp-stat-label">atmosphere</div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* ── ACTIONS ── */}
@@ -204,6 +211,9 @@ export default function BarPage() {
         <button className={`bp-checkin-btn ${userCheckedIn ? 'active' : ''}`} onClick={handleCheckin}>
           {userCheckedIn ? '📍 Here now' : '📍 Check in'}
         </button>
+        <a className="bp-maps-btn" href={mapsUrl} target="_blank" rel="noopener noreferrer">
+          🗺 Directions
+        </a>
         <button className="bp-share-btn" onClick={handleShare}>
           {shareCopied ? '✓ Copied!' : '↗ Share'}
         </button>
@@ -230,6 +240,24 @@ export default function BarPage() {
         {bar.tags.map(t => <span key={t} className="bp-tag">{t}</span>)}
       </div>
 
+      {/* ── ATMOSPHERE DISPLAY ── */}
+      {atmData && (
+        <div className="bp-section">
+          <AtmosphereDisplay scores={atmData} count={atmData.count} />
+        </div>
+      )}
+
+      {/* ── RATE ATMOSPHERE (only after check in) ── */}
+      {userCheckedIn && (
+        <div className="bp-section">
+          <AtmosphereScore
+            venueName={bar.name}
+            existingScore={userAtmScore}
+            onSubmitted={() => getUserAtmosphereScore(user.uid, bar.name).then(setUserAtmScore)}
+          />
+        </div>
+      )}
+
       {/* ── DESCRIPTION ── */}
       <div className="bp-section">
         <div className="bp-section-title">About</div>
@@ -246,12 +274,11 @@ export default function BarPage() {
           <span style={{ fontSize: 20 }}>🏆</span>
           <div>
             <div className="bp-owner-name">Managed by {claimedVenues[bar.name]?.ownerName}</div>
-            <div className="bp-owner-sub">This listing is verified and managed by the bar owner</div>
+            <div className="bp-owner-sub">Verified and managed by the bar owner</div>
           </div>
         </div>
       )}
 
-      {/* ── CLAIM ── */}
       {!isClaimed && (
         <button className="bp-claim-btn" onClick={() => setShowClaimModal(true)}>
           🏷️ Is this your bar? Claim this listing →
@@ -319,7 +346,7 @@ export default function BarPage() {
         <div className="bp-share-card-title">Share this bar with friends</div>
         <div className="bp-share-url">{shareUrl}</div>
         <button className="bp-share-card-btn" onClick={handleShare}>
-          {shareCopied ? '✓ Link copied!' : '↗ Share this bar'}
+          {shareCopied ? '✓ Copied!' : '↗ Share this bar'}
         </button>
       </div>
 

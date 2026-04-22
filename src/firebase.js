@@ -11,14 +11,7 @@ const firebaseConfig = {
   appId: "1:802784850583:web:6bb36704c6d485d2f6afd2"
 }
 
-// Initialize Firebase app
 const app = initializeApp(firebaseConfig)
-
-// Auth — handles login, signup, logout
 export const auth = getAuth(app)
-
-// Google sign-in provider
 export const googleProvider = new GoogleAuthProvider()
-
-// Firestore — the database
 export const db = getFirestore(app)

@@ -1,17 +1,7 @@
 import {
-  collection,
-  doc,
-  addDoc,
-  setDoc,
-  getDoc,
-  getDocs,
-  deleteDoc,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  increment,
-  serverTimestamp,
+  collection, doc, addDoc, setDoc, getDoc, getDocs,
+  deleteDoc, query, where, orderBy, onSnapshot,
+  increment, serverTimestamp, updateDoc, arrayUnion, arrayRemove,
 } from 'firebase/firestore'
 import { db } from '../firebase'
 
@@ -19,8 +9,7 @@ import { db } from '../firebase'
 
 export const addRsvp = async (userId, type, targetName) => {
   const ref = await addDoc(collection(db, 'rsvps'), {
-    userId, type, targetName,
-    createdAt: serverTimestamp(),
+    userId, type, targetName, createdAt: serverTimestamp(),
   })
   if (type === 'bar') {
     await setDoc(doc(db, 'venueCounts', targetName),
@@ -37,12 +26,8 @@ export const removeRsvp = async (rsvpId, type, targetName) => {
     const countRef = doc(db, 'venueCounts', targetName)
     const snap = await getDoc(countRef)
     const current = snap.exists() ? (snap.data().rsvpCount || 0) : 0
-    await setDoc(countRef,
-      { rsvpCount: Math.max(0, current - 1), name: targetName },
-      { merge: true }
-    )
-    await setDoc(doc(db, 'appStats', 'global'),
-      { totalRsvps: increment(-1) }, { merge: true })
+    await setDoc(countRef, { rsvpCount: Math.max(0, current - 1), name: targetName }, { merge: true })
+    await setDoc(doc(db, 'appStats', 'global'), { totalRsvps: increment(-1) }, { merge: true })
   }
 }
 
@@ -60,47 +45,148 @@ export const subscribeToVenueCounts = (callback) => {
   })
 }
 
-// ─── BAR CLAIMING ─────────────────────────────────────────────────
+// ─── COMMENTS ─────────────────────────────────────────────────────
 
-// Submit a claim request for a bar
-export const submitBarClaim = async (userId, userEmail, venueName, claimData) => {
-  await addDoc(collection(db, 'claims'), {
-    userId,
-    userEmail,
-    venueName,
-    ownerName: claimData.ownerName,
-    role: claimData.role,
-    contactEmail: claimData.contactEmail,
-    verificationNote: claimData.verificationNote,
-    status: 'pending', // pending, approved, rejected
+export const addComment = async (userId, username, venueName, text) => {
+  await addDoc(collection(db, 'comments'), {
+    userId, username, venueName, text,
     createdAt: serverTimestamp(),
   })
 }
 
-// Real-time listener for all claim statuses (so UI updates when admin approves)
+export const deleteComment = async (commentId) => {
+  await deleteDoc(doc(db, 'comments', commentId))
+}
+
+export const subscribeToComments = (venueName, callback) => {
+  const q = query(
+    collection(db, 'comments'),
+    where('venueName', '==', venueName),
+    orderBy('createdAt', 'desc')
+  )
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+  })
+}
+
+// ─── ATMOSPHERE SCORES ────────────────────────────────────────────
+
+export const submitAtmosphereScore = async (userId, venueName, scores) => {
+  const docId = `${userId}_${venueName}`
+  const overall = Math.round((scores.screens + scores.sound + scores.crowd + scores.service) / 4 * 10) / 10
+  await setDoc(doc(db, 'atmosphereScores', docId), {
+    userId, venueName, ...scores, overall, createdAt: serverTimestamp(),
+  })
+  const aggRef = doc(db, 'atmosphereAgg', venueName)
+  const snap = await getDoc(aggRef)
+  if (snap.exists()) {
+    const d = snap.data()
+    const count = (d.count || 0) + 1
+    await setDoc(aggRef, {
+      venueName, count,
+      screens: Math.round(((d.screens || 0) * (count - 1) + scores.screens) / count * 10) / 10,
+      sound:   Math.round(((d.sound   || 0) * (count - 1) + scores.sound)   / count * 10) / 10,
+      crowd:   Math.round(((d.crowd   || 0) * (count - 1) + scores.crowd)   / count * 10) / 10,
+      service: Math.round(((d.service || 0) * (count - 1) + scores.service) / count * 10) / 10,
+      overall: Math.round(((d.overall || 0) * (count - 1) + overall)        / count * 10) / 10,
+    })
+  } else {
+    await setDoc(aggRef, { venueName, count: 1, overall, ...scores })
+  }
+}
+
+export const getUserAtmosphereScore = async (userId, venueName) => {
+  const snap = await getDoc(doc(db, 'atmosphereScores', `${userId}_${venueName}`))
+  return snap.exists() ? snap.data() : null
+}
+
+export const subscribeToAtmosphereScores = (callback) => {
+  return onSnapshot(collection(db, 'atmosphereAgg'), (snap) => {
+    const scores = {}
+    snap.docs.forEach(d => { scores[d.id] = d.data() })
+    callback(scores)
+  })
+}
+
+// ─── WATCH PARTY GROUPS ───────────────────────────────────────────
+
+export const createGroup = async (userId, username, groupName, venueName) => {
+  const ref = await addDoc(collection(db, 'groups'), {
+    name: groupName, venueName,
+    createdBy: userId, createdByName: username,
+    members: [{ userId, username, joinedAt: new Date().toISOString() }],
+    memberIds: [userId],
+    createdAt: serverTimestamp(),
+  })
+  return ref.id
+}
+
+export const joinGroup = async (groupId, userId, username) => {
+  await updateDoc(doc(db, 'groups', groupId), {
+    members: arrayUnion({ userId, username, joinedAt: new Date().toISOString() }),
+    memberIds: arrayUnion(userId),
+  })
+}
+
+export const leaveGroup = async (groupId, userId) => {
+  const snap = await getDoc(doc(db, 'groups', groupId))
+  if (!snap.exists()) return
+  const members = snap.data().members.filter(m => m.userId !== userId)
+  const memberIds = snap.data().memberIds.filter(id => id !== userId)
+  await updateDoc(doc(db, 'groups', groupId), { members, memberIds })
+}
+
+export const getGroup = async (groupId) => {
+  const snap = await getDoc(doc(db, 'groups', groupId))
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null
+}
+
+export const getUserGroups = async (userId) => {
+  const q = query(collection(db, 'groups'), where('memberIds', 'array-contains', userId))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
+
+export const subscribeToUserGroups = (userId, callback) => {
+  const q = query(collection(db, 'groups'), where('memberIds', 'array-contains', userId))
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+  })
+}
+
+// ─── PUSH NOTIFICATIONS ───────────────────────────────────────────
+
+export const savePushSubscription = async (userId, subscription) => {
+  await setDoc(doc(db, 'pushSubscriptions', userId), {
+    userId, subscription: JSON.stringify(subscription), updatedAt: serverTimestamp(),
+  })
+}
+
+// ─── BAR CLAIMING ─────────────────────────────────────────────────
+
+export const submitBarClaim = async (userId, userEmail, venueName, claimData) => {
+  await addDoc(collection(db, 'claims'), {
+    userId, userEmail, venueName,
+    ownerName: claimData.ownerName, role: claimData.role,
+    contactEmail: claimData.contactEmail, verificationNote: claimData.verificationNote,
+    status: 'pending', createdAt: serverTimestamp(),
+  })
+}
+
 export const subscribeToClaimedVenues = (callback) => {
   const q = query(collection(db, 'claims'), where('status', '==', 'approved'))
   return onSnapshot(q, (snap) => {
     const claimed = {}
     snap.docs.forEach(d => {
       const data = d.data()
-      claimed[data.venueName] = {
-        ownerName: data.ownerName,
-        contactEmail: data.contactEmail,
-        claimedAt: data.approvedAt,
-      }
+      claimed[data.venueName] = { ownerName: data.ownerName, contactEmail: data.contactEmail }
     })
     callback(claimed)
   })
 }
 
-// Check if user has already submitted a claim for a venue
 export const getUserClaim = async (userId, venueName) => {
-  const q = query(
-    collection(db, 'claims'),
-    where('userId', '==', userId),
-    where('venueName', '==', venueName)
-  )
+  const q = query(collection(db, 'claims'), where('userId', '==', userId), where('venueName', '==', venueName))
   const snap = await getDocs(q)
   return snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() }
 }
@@ -108,8 +194,7 @@ export const getUserClaim = async (userId, venueName) => {
 // ─── APP STATS ────────────────────────────────────────────────────
 
 export const incrementUserCount = async () => {
-  await setDoc(doc(db, 'appStats', 'global'),
-    { totalUsers: increment(1) }, { merge: true })
+  await setDoc(doc(db, 'appStats', 'global'), { totalUsers: increment(1) }, { merge: true })
 }
 
 export const subscribeToAppStats = (callback) => {
@@ -165,17 +250,14 @@ export const getUserReactions = async (userId) => {
 
 export const checkIn = async (userId, username, venueName) => {
   await setDoc(doc(db, 'checkins', `${userId}_${venueName}`), {
-    userId, username, venueName,
-    checkedInAt: serverTimestamp(),
+    userId, username, venueName, checkedInAt: serverTimestamp(),
   })
-  await setDoc(doc(db, 'appStats', 'global'),
-    { totalCheckins: increment(1) }, { merge: true })
+  await setDoc(doc(db, 'appStats', 'global'), { totalCheckins: increment(1) }, { merge: true })
 }
 
 export const checkOut = async (userId, venueName) => {
   await deleteDoc(doc(db, 'checkins', `${userId}_${venueName}`))
-  await setDoc(doc(db, 'appStats', 'global'),
-    { totalCheckins: increment(-1) }, { merge: true })
+  await setDoc(doc(db, 'appStats', 'global'), { totalCheckins: increment(-1) }, { merge: true })
 }
 
 export const subscribeToCheckins = (callback) => {
@@ -197,39 +279,12 @@ export const getUserCheckin = async (userId) => {
   return { id: snap.docs[0].id, ...snap.docs[0].data() }
 }
 
-// ─── COMMENTS ─────────────────────────────────────────────────────
-
-export const addComment = async (userId, username, venueName, text) => {
-  await addDoc(collection(db, 'comments'), {
-    userId, username, venueName, text,
-    createdAt: serverTimestamp(),
-  })
-}
-
-export const deleteComment = async (commentId) => {
-  await deleteDoc(doc(db, 'comments', commentId))
-}
-
-export const subscribeToComments = (venueName, callback) => {
-  const q = query(
-    collection(db, 'comments'),
-    where('venueName', '==', venueName),
-    orderBy('createdAt', 'desc')
-  )
-  return onSnapshot(q, (snap) => {
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-  })
-}
-
 // ─── COMMUNITY EVENTS ─────────────────────────────────────────────
 
 export const submitEvent = async (userId, username, eventData) => {
   const ref = await addDoc(collection(db, 'events'), {
-    ...eventData,
-    createdBy: userId,
-    createdByName: username,
-    createdAt: serverTimestamp(),
-    approved: true,
+    ...eventData, createdBy: userId, createdByName: username,
+    createdAt: serverTimestamp(), approved: true,
   })
   return ref.id
 }
