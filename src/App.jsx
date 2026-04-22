@@ -322,7 +322,9 @@ function MainApp() {
         <div className="tab-content">
           <div className="app-stats-row">
             <div className="app-stat">
-              <div className="app-stat-num">{appStats.totalUsers || 0}</div>
+              <div className={`app-stat-num ${(appStats.totalUsers || 0) === 0 ? 'zero' : ''}`}>
+  {appStats.totalUsers || 0}
+</div>
               <div className="app-stat-label">members</div>
             </div>
             <div className="app-stat-div" />
@@ -652,19 +654,19 @@ function MainApp() {
         </div>
       )}
 
-      <div className="bottom-nav">
-        {[
-          { id: 'discover', icon: '🗺', label: 'Discover' },
-          { id: 'schedule', icon: '📅', label: 'Schedule' },
-          { id: 'host',     icon: '+',  label: 'Host' },
-          { id: 'profile',  icon: '👤', label: 'Profile' },
-        ].map(n => (
-          <div key={n.id} className={`nav-item ${tab === n.id ? 'active' : ''}`} onClick={() => setTab(n.id)}>
-            <div className="nav-icon">{n.icon}</div>
-            <div className="nav-label">{n.label}</div>
-          </div>
-        ))}
-      </div>
+<div className="bottom-nav">
+  {[
+    { id: 'discover', icon: '🗺️', label: 'Discover' },
+    { id: 'schedule', icon: '📅', label: 'Schedule' },
+    { id: 'host',     icon: '＋',  label: 'Host' },
+    { id: 'profile',  icon: '👤', label: 'Profile' },
+  ].map(n => (
+    <div key={n.id} className={`nav-item ${tab === n.id ? 'active' : ''}`} onClick={() => setTab(n.id)}>
+      <div className="nav-icon">{n.icon}</div>
+      <div className="nav-label">{n.label}</div>
+    </div>
+  ))}
+</div>
     </div>
   )
 }

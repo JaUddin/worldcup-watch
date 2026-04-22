@@ -189,5 +189,5 @@ export const TEAM_COLORS = {
   Portugal:  { bg: "#ffebee", color: "#b71c1c" },
   Germany:   { bg: "#eceff1", color: "#37474f" },
   Spain:     { bg: "#fff9c4", color: "#795548" },
-  Open:      { bg: "#f3e5f5", color: "#4a148c" },
+  Open: { bg: '#e8f5e9', color: '#1a3d1a' },
 }

@@ -272,6 +272,8 @@ body {
   letter-spacing: -0.5px;
 }
 
+.app-stat-num.zero { color: #ccc; }
+
 .app-stat-label {
   font-size: 10px;
   color: var(--text-muted);
