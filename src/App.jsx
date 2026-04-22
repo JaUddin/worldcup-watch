@@ -90,17 +90,15 @@ function MainApp() {
   const profileDropdownRef = useRef(null)
   const newUserTracked = useRef(false)
 
-  useEffect(() => {
-    if (user) {
-      const done = localStorage.getItem(ONBOARDING_KEY + '_' + user.uid)
-      if (!done) setShowOnboarding(true)
-    }
-  }, [user])
-
-  const completeOnboarding = () => {
-    localStorage.setItem(ONBOARDING_KEY + '_' + user.uid, '1')
-    setShowOnboarding(false)
+ useEffect(() => {
+  if (user) {
+    setShowOnboarding(true)
   }
+}, [user])
+
+const completeOnboarding = () => {
+  setShowOnboarding(false)
+}
 
   useEffect(() => {
     if (!user?.uid) return

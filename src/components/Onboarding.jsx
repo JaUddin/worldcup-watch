@@ -3,32 +3,24 @@ import './Onboarding.css'
 
 const STEPS = [
   {
-    emoji: '🏆',
+    emoji: '⚽',
     title: 'Welcome to Kickoff NYC',
-    sub: 'The home of World Cup 2026 watch parties in New York City. Find your crowd, find your bar.',
-    color: '#1a3d1a',
-    bg: '#1a3d1a',
+    sub: 'The home of World Cup 2026 watch parties across New York City. Find your bar, find your crowd.',
   },
   {
     emoji: '📍',
-    title: 'Find bars near you',
-    sub: 'Browse verified NYC bars hosting watch parties. Filter by team, neighborhood, or vibe.',
-    color: '#1565c0',
-    bg: '#1a3d1a',
+    title: 'Find the energy near you',
+    sub: 'Browse verified NYC bars hosting watch parties. See who\'s checked in right now and where the crowd is.',
   },
   {
-    emoji: '⚽',
+    emoji: '🔥',
     title: 'Check in & connect',
-    sub: 'Tell the crowd you\'re here. Check in when you arrive, leave comments, react to the vibe.',
-    color: '#e65100',
-    bg: '#1a3d1a',
+    sub: 'Check in when you arrive, react to the vibe, leave comments, and rate the atmosphere.',
   },
   {
     emoji: '↗',
     title: 'Share with your crew',
-    sub: 'Every bar has its own link. Share it on WhatsApp, iMessage, or Instagram to fill the place up.',
-    color: '#c8a415',
-    bg: '#1a3d1a',
+    sub: 'Every bar has its own link. Share it on WhatsApp or iMessage to bring your friends to the right spot.',
   },
 ]
 
@@ -39,11 +31,18 @@ export default function Onboarding({ onComplete }) {
 
   return (
     <div className="ob-screen">
+      {/* Skip always available */}
+      <button className="ob-skip-top" onClick={onComplete}>Skip</button>
+
       <div className="ob-card">
-        {/* Progress dots */}
+        {/* Progress bars */}
         <div className="ob-dots">
           {STEPS.map((_, i) => (
-            <div key={i} className={`ob-dot ${i === step ? 'active' : i < step ? 'done' : ''}`} />
+            <div
+              key={i}
+              className={`ob-dot ${i === step ? 'active' : i < step ? 'done' : ''}`}
+              onClick={() => setStep(i)}
+            />
           ))}
         </div>
 
@@ -62,22 +61,21 @@ export default function Onboarding({ onComplete }) {
         <div className="ob-actions">
           {isLast ? (
             <button className="ob-btn-primary" onClick={onComplete}>
-              Let's go! →
+              Let's find my bar →
             </button>
           ) : (
-            <>
-              <button className="ob-btn-primary" onClick={() => setStep(s => s + 1)}>
-                Next →
-              </button>
-              <button className="ob-btn-skip" onClick={onComplete}>
-                Skip
-              </button>
-            </>
+            <button className="ob-btn-primary" onClick={() => setStep(s => s + 1)}>
+              Next →
+            </button>
           )}
         </div>
 
-        {/* Step indicator */}
         <div className="ob-step-label">{step + 1} of {STEPS.length}</div>
+      </div>
+
+      {/* Bottom tagline */}
+      <div className="ob-tagline">
+        MetLife Stadium · 8 matches · World Cup Final 2026
       </div>
     </div>
   )
