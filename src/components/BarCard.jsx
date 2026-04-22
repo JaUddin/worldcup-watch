@@ -43,6 +43,9 @@ export default function BarCard({
   const barUrl = `${SITE_URL}/bar/${barSlug}`
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bar.address)}`
 
+  // Extract accent color from team color for the stripe
+  const accentColor = bar.teamColor?.color || '#1a3d1a'
+
   useEffect(() => {
     if (!expanded) return
     const unsub = subscribeToComments(bar.name, setComments)
@@ -83,8 +86,10 @@ export default function BarCard({
 
   return (
     <>
-      <div className={`bar-card ${expanded ? 'expanded' : ''}`}>
-
+      <div
+        className={`bar-card ${expanded ? 'expanded' : ''}`}
+        style={{ '--card-accent': accentColor }}
+      >
         {/* ── TOP ── */}
         <div className="bc-top" onClick={() => setExpanded(e => !e)}>
           <div className="bc-info">
@@ -182,9 +187,7 @@ export default function BarCard({
                 <div className="bc-here-title"><span className="live-dot" /> Here right now</div>
                 <div className="bc-here-names">
                   {checkinsHere.slice(0, 6).map((c, i) => (
-                    <span key={i} className="bc-here-avatar" title={c.username}>
-                      {(c.username || '?').slice(0, 2).toUpperCase()}
-                    </span>
+                    <span key={i} className="bc-here-avatar">{(c.username || '?').slice(0, 2).toUpperCase()}</span>
                   ))}
                   {checkinsHere.length > 6 && <span className="bc-here-more">+{checkinsHere.length - 6} more</span>}
                 </div>
@@ -218,12 +221,10 @@ export default function BarCard({
           </div>
         )}
 
-        {/* ── FOOTER — now has 4 buttons including Directions ── */}
+        {/* ── FOOTER ── */}
         <div className="bc-footer">
-          <button
-            className={`bc-checkin-btn ${userCheckedInHere ? 'checked-in' : ''}`}
-            onClick={() => userCheckedInHere ? onCheckOut(bar.name) : onCheckIn(bar.name)}
-          >
+          <button className={`bc-checkin-btn ${userCheckedInHere ? 'checked-in' : ''}`}
+            onClick={() => userCheckedInHere ? onCheckOut(bar.name) : onCheckIn(bar.name)}>
             {userCheckedInHere ? '📍 Here' : '📍 Check in'}
           </button>
           <a className="bc-maps-btn" href={mapsUrl} target="_blank" rel="noopener noreferrer">
@@ -232,10 +233,7 @@ export default function BarCard({
           <button className="bc-share-btn" onClick={handleShare}>
             {shareCopied ? '✓' : '↗ Share'}
           </button>
-          <button
-            className={`bc-rsvp-btn ${isGoing ? 'going' : ''}`}
-            onClick={() => onToggleRsvp(bar.name)}
-          >
+          <button className={`bc-rsvp-btn ${isGoing ? 'going' : ''}`} onClick={() => onToggleRsvp(bar.name)}>
             {isGoing ? '✓ Going' : 'Interested'}
           </button>
         </div>
