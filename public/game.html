@@ -101,6 +101,166 @@ canvas{display:block;}
 .ke-btn:hover{opacity:0.9;}
 .ke-features{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
 .ke-feature{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);font-size:11px;padding:4px 10px;border-radius:20px;}
+
+/* ── MOBILE TOUCH CONTROLS ── */
+#touch-controls {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  border-top: 2px solid rgba(245,197,24,0.3);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+/* Portrait layout */
+@media (orientation: portrait) {
+  #touch-controls {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px 20px;
+    height: 130px;
+  }
+
+  #game {
+    height: calc(100vh - 130px) !important;
+    height: calc(100dvh - 130px) !important;
+  }
+}
+
+/* Landscape layout — controls on right side */
+@media (orientation: landscape) and (max-width: 1024px) {
+  #touch-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: auto;
+    width: 140px;
+    border-top: none;
+    border-left: 2px solid rgba(245,197,24,0.3);
+    padding: 10px;
+    gap: 8px;
+    height: 100%;
+  }
+
+  #game {
+    width: calc(100vw - 140px) !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+  }
+}
+
+/* Hide on desktop */
+@media (min-width: 1025px) and (orientation: landscape) {
+  #touch-controls { display: none !important; }
+  #game { width: 100vw !important; height: 100vh !important; }
+}
+
+/* D-pad */
+.dpad {
+  display: grid;
+  grid-template-columns: 44px 44px 44px;
+  grid-template-rows: 44px 44px 44px;
+  gap: 3px;
+}
+
+.dpad-btn {
+  background: rgba(255,255,255,0.1);
+  border: 1.5px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dpad-btn:active, .dpad-btn.pressed {
+  background: rgba(245,197,24,0.35);
+  border-color: #f5c518;
+}
+
+.dpad-center { background: transparent; border: none; }
+
+/* Action buttons */
+.action-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.action-btn {
+  border-radius: 50%;
+  border: 2.5px solid;
+  font-family: 'Bangers', cursive;
+  font-size: 13px;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s, background 0.1s;
+}
+
+.action-btn:active { transform: scale(0.92); }
+
+.btn-shoot {
+  width: 58px; height: 58px;
+  background: rgba(0,104,71,0.4);
+  border-color: #006847;
+  color: #fff;
+}
+
+.btn-shoot.pressed {
+  background: #006847;
+}
+
+.btn-pass {
+  width: 46px; height: 46px;
+  background: rgba(206,17,38,0.3);
+  border-color: #CE1126;
+  color: #fff;
+}
+
+.btn-pass.pressed { background: #CE1126; }
+
+/* Rotate hint — portrait only */
+.rotate-hint {
+  display: none;
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.7);
+  color: rgba(255,255,255,0.6);
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  z-index: 300;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+@media (orientation: portrait) and (max-width: 500px) {
+  .rotate-hint { display: block; }
+}
+
 </style>
 </head>
 <body>
@@ -117,13 +277,13 @@ canvas{display:block;}
   <div class="t-ground"></div>
 
   <!-- Kickoff NYC crossover banner -->
-  <div id="kickoff-banner" onclick="window.location.href='/'" title="Find your watch party">
+  <div id="kickoff-banner" onclick="window.open('https://worldcup-watch-t1s8.vercel.app','_blank')" title="Find your watch party">
     <div class="kb-icon">📍</div>
     <div class="kb-text">
       <div class="kb-title">KICKOFF NYC</div>
-      <div class="kb-sub">Back to Kickoff NYC — find your watch party</div>
+      <div class="kb-sub">Find real World Cup 2026 watch parties across NYC</div>
     </div>
-    <div class="kb-arrow">← Back</div>
+    <div class="kb-arrow">→</div>
   </div>
 </div>
 
@@ -1212,7 +1372,7 @@ function doEnding() {
   $('r-emoji').textContent='🏆🇲🇽🏆';
   $('r-title').textContent='¡CAMPEÓN!';$('r-title').style.color='#f5c518';
   $('r-score').textContent='⭐⭐⭐ WORLD CUP WINNER ⭐⭐⭐';
-  $('r-msg').innerHTML='<strong style="color:#f5c518">From a dusty alley in Oaxaca to the Estadio Azteca.</strong><br><br>You are Miguel Reyes. Number 10. Mexico\'s hero. The 2026 FIFA World Cup Champion.<br><br>🌮 Abuela is watching. The whole country is watching. You did it.<br><br><span style="color:#f5c518;font-weight:700">¡VIVA MÉXICO! 🇲🇽⚽🏆</span><div id="kickoff-ending" onclick="window.location.href='/'"><div class="ke-badge">⚽ REAL WORLD CUP 2026</div><div class="ke-title">Now Watch It For Real</div><div class="ke-desc">You lived the dream as Miguel. Now find your crew for the actual World Cup 2026 — 8 matches at MetLife Stadium, right here in NYC.</div><div class="ke-features"><span class="ke-feature">📍 12 verified bars</span><span class="ke-feature">🔴 Live check-ins</span><span class="ke-feature">👥 Watch party groups</span><span class="ke-feature">🗺 Directions</span></div><button class="ke-btn">Find My Watch Party →</button></div>';
+  $('r-msg').innerHTML='<strong style="color:#f5c518">From a dusty alley in Oaxaca to the Estadio Azteca.</strong><br><br>You are Miguel Reyes. Number 10. Mexico\'s hero. The 2026 FIFA World Cup Champion.<br><br>🌮 Abuela is watching. The whole country is watching. You did it.<br><br><span style="color:#f5c518;font-weight:700">¡VIVA MÉXICO! 🇲🇽⚽🏆</span><div id="kickoff-ending" onclick="window.open(\'https://worldcup-watch-t1s8.vercel.app\',\'_blank\')"><div class="ke-badge">⚽ REAL WORLD CUP 2026</div><div class="ke-title">Now Watch It For Real</div><div class="ke-desc">You lived the dream as Miguel. Now find your crew for the actual World Cup 2026 — 8 matches at MetLife Stadium, right here in NYC.</div><div class="ke-features"><span class="ke-feature">📍 12 verified bars</span><span class="ke-feature">🔴 Live check-ins</span><span class="ke-feature">👥 Watch party groups</span><span class="ke-feature">🗺 Directions</span></div><button class="ke-btn">Find My Watch Party →</button></div>';
   $('r-stars').innerHTML='🌟🌟🌟🌟🌟';
   $('r-retry').style.display='none';$('r-cont').textContent='PLAY AGAIN ↺';
   $('r-cont').onclick=()=>startGame();
@@ -2390,5 +2550,137 @@ $('start-btn').addEventListener('click', e => {
   startGame();
 });
 </script>
+
+<!-- Rotate hint -->
+<div class="rotate-hint">↺ Rotate for better gameplay</div>
+
+<!-- Touch controls — shown on mobile only -->
+<div id="touch-controls">
+  <!-- D-pad left -->
+  <div class="dpad" id="dpad">
+    <div></div>
+    <div class="dpad-btn" id="btn-up" data-key="ArrowUp">↑</div>
+    <div></div>
+    <div class="dpad-btn" id="btn-left" data-key="ArrowLeft">←</div>
+    <div class="dpad-center"></div>
+    <div class="dpad-btn" id="btn-right" data-key="ArrowRight">→</div>
+    <div></div>
+    <div class="dpad-btn" id="btn-down" data-key="ArrowDown">↓</div>
+    <div></div>
+  </div>
+
+  <!-- Action buttons right -->
+  <div class="action-btns">
+    <div class="action-btn btn-shoot" id="btn-shoot">SHOOT</div>
+    <div class="action-btn btn-pass" id="btn-pass">PASS</div>
+  </div>
+</div>
+
+<script>
+// ── MOBILE TOUCH CONTROLS ─────────────────────────
+(function() {
+  // Only activate on touch devices
+  if (!('ontouchstart' in window)) return;
+
+  const held = new Set();
+
+  function fireKey(code, type) {
+    const e = new KeyboardEvent(type, {
+      code, key: code.replace('Arrow',''),
+      bubbles: true, cancelable: true
+    });
+    document.dispatchEvent(e);
+  }
+
+  function pressBtn(el, code) {
+    if (held.has(code)) return;
+    held.add(code);
+    el.classList.add('pressed');
+    fireKey(code, 'keydown');
+  }
+
+  function releaseBtn(el, code) {
+    if (!held.has(code)) return;
+    held.delete(code);
+    el.classList.remove('pressed');
+    fireKey(code, 'keyup');
+  }
+
+  // D-pad buttons
+  ['up','down','left','right'].forEach(dir => {
+    const el = document.getElementById('btn-' + dir);
+    if (!el) return;
+    const code = 'Arrow' + dir.charAt(0).toUpperCase() + dir.slice(1);
+
+    el.addEventListener('touchstart', e => { e.preventDefault(); pressBtn(el, code); }, { passive: false });
+    el.addEventListener('touchend',   e => { e.preventDefault(); releaseBtn(el, code); }, { passive: false });
+    el.addEventListener('touchcancel',e => { e.preventDefault(); releaseBtn(el, code); }, { passive: false });
+  });
+
+  // Shoot button = Space (hold to power up, release to shoot)
+  const shootBtn = document.getElementById('btn-shoot');
+  if (shootBtn) {
+    shootBtn.addEventListener('touchstart', e => {
+      e.preventDefault();
+      shootBtn.classList.add('pressed');
+      fireKey('Space', 'keydown');
+    }, { passive: false });
+
+    shootBtn.addEventListener('touchend', e => {
+      e.preventDefault();
+      shootBtn.classList.remove('pressed');
+      fireKey('Space', 'keyup');
+    }, { passive: false });
+
+    shootBtn.addEventListener('touchcancel', e => {
+      e.preventDefault();
+      shootBtn.classList.remove('pressed');
+      fireKey('Space', 'keyup');
+    }, { passive: false });
+  }
+
+  // Pass button = Shift
+  const passBtn = document.getElementById('btn-pass');
+  if (passBtn) {
+    passBtn.addEventListener('touchstart', e => {
+      e.preventDefault();
+      passBtn.classList.add('pressed');
+      const ev = new KeyboardEvent('keydown', { code: 'ShiftLeft', key: 'Shift', shiftKey: true, bubbles: true });
+      document.dispatchEvent(ev);
+    }, { passive: false });
+
+    passBtn.addEventListener('touchend', e => {
+      e.preventDefault();
+      passBtn.classList.remove('pressed');
+      const ev = new KeyboardEvent('keyup', { code: 'ShiftLeft', key: 'Shift', shiftKey: false, bubbles: true });
+      document.dispatchEvent(ev);
+    }, { passive: false });
+  }
+
+  // Story screen: tap anywhere advances dialogue (already handled by game)
+  // But prevent double-fire on touch controls area
+  document.getElementById('touch-controls').addEventListener('touchstart', e => {
+    e.stopPropagation();
+  });
+
+  // Hide controls on non-game screens, show on game screen
+  const observer = new MutationObserver(() => {
+    const gameActive = document.getElementById('scr-game')?.classList.contains('active');
+    const controls = document.getElementById('touch-controls');
+    if (controls) {
+      controls.style.display = gameActive ? '' : 'none';
+    }
+  });
+
+  document.querySelectorAll('.screen').forEach(s => {
+    observer.observe(s, { attributes: true, attributeFilter: ['class'] });
+  });
+
+  // Initial state
+  const controls = document.getElementById('touch-controls');
+  if (controls) controls.style.display = 'none';
+})();
+</script>
+
 </body>
 </html>

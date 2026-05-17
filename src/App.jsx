@@ -518,21 +518,34 @@ const toggleTheme = () => setIsDark(d => !d)
 
       {/* ── PLAY ── */}
       {tab === 'play' && (
-        <div className="tab-content play-tab">
-          <div className="play-header">
-            <div className="play-title">⚽ El Camino</div>
-            <div className="play-sub">Road to Mexico 2026 — kill time before the match</div>
-          </div>
-          <div className="play-frame-wrap">
-            <iframe
-              src="/game.html"
-              className="play-frame"
-              title="El Camino — Road to Mexico 2026"
-              allowFullScreen
-            />
-          </div>
-        </div>
-      )} 
+  <div className="tab-content play-tab">
+    <div className="play-header">
+      <div>
+        <div className="play-title">⚽ El Camino</div>
+        <div className="play-sub">Road to Mexico 2026 — kill time before the match</div>
+      </div>
+      <button
+        className="play-fullscreen-btn"
+        onClick={() => {
+          const iframe = document.querySelector('.play-frame')
+          if (iframe?.requestFullscreen) iframe.requestFullscreen()
+          else if (iframe?.webkitRequestFullscreen) iframe.webkitRequestFullscreen()
+        }}
+      >
+        ⛶ Full screen
+      </button>
+    </div>
+    <div className="play-frame-wrap">
+      <iframe
+        src="/game.html"
+        className="play-frame"
+        title="El Camino — Road to Mexico 2026"
+        allowFullScreen
+      />
+    </div>
+  </div>
+)}
+
 
       {/* ── HOST ── */}
       {tab === 'host' && (
