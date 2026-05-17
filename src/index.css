@@ -166,7 +166,9 @@ body {
     margin-left: 260px !important;
     padding-bottom: 0 !important;
     height: 100vh !important;
+    height: 100dvh !important;
     overflow-y: auto !important;
+    width: calc(100vw - 260px) !important;
     max-width: calc(100vw - 260px) !important;
   }
 
