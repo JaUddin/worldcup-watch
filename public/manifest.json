@@ -1,0 +1,16 @@
+{
+  "name": "Kickoff NYC",
+  "short_name": "Kickoff NYC",
+  "description": "World Cup 2026 Watch Parties in NYC",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a1f0d",
+  "theme_color": "#1a3d1a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

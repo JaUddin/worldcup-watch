@@ -516,6 +516,27 @@ const toggleTheme = () => setIsDark(d => !d)
         </div>
       )}
 
+      {/* ── PLAY ── */}
+      {tab === 'play' && (
+        <div className="tab-content play-tab">
+          <div className="play-header">
+            <div className="play-title">⚽ El Camino</div>
+            <div className="play-sub">Road to Mexico 2026 — kill time before the match</div>
+          </div>
+          <div className="play-frame-wrap">
+            <iframe
+              src="/game.html"
+              className="play-frame"
+              title="El Camino — Road to Mexico 2026"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── HOST ── */}
+      {tab === 'host' && (
+
       {/* ── HOST ── */}
       {tab === 'host' && (
         <div className="tab-content">
@@ -658,10 +679,11 @@ const toggleTheme = () => setIsDark(d => !d)
 
 <div className="bottom-nav">
   {[
-    { id: 'discover', icon: '🗺️', label: 'Discover' },
-    { id: 'schedule', icon: '📅', label: 'Schedule' },
-    { id: 'host',     icon: '＋',  label: 'Host' },
-    { id: 'profile',  icon: '👤', label: 'Profile' },
+{ id: 'discover', icon: '🗺️', label: 'Discover' },
+{ id: 'schedule', icon: '📅', label: 'Schedule' },
+{ id: 'play',     icon: '⚽',  label: 'Play' },
+{ id: 'host',     icon: '＋',  label: 'Host' },
+{ id: 'profile',  icon: '👤', label: 'Profile' },
   ].map(n => (
     <div key={n.id} className={`nav-item ${tab === n.id ? 'active' : ''}`} onClick={() => setTab(n.id)}>
       <div className="nav-icon">{n.icon}</div>
