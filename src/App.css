@@ -409,3 +409,100 @@
   .play-header { display: none; }
 }
 
+/* ── ADD TO BOTTOM OF src/App.css ── */
+
+.app-shell {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+}
+
+.sidebar-toggle { display: none; }
+
+@media (min-width: 900px) {
+  .sidebar-toggle {
+    display: flex;
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 300;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+
+  .sidebar-toggle:hover { background: rgba(255,255,255,0.2); }
+
+  .desktop-sidebar {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 240px;
+    background: #0a1f0d;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    z-index: 200;
+    transition: transform 0.25s ease;
+    overflow: hidden;
+  }
+
+  .desktop-sidebar.collapsed { transform: translateX(-240px); }
+
+  .sidebar-brand {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sidebar-brand-icon { font-size: 26px; }
+  .sidebar-brand-text { color: #fff; font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+
+  .sidebar-nav { padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+
+  .sidebar-nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; border-radius: 10px; cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .sidebar-nav-item:hover { background: rgba(255,255,255,0.06); }
+  .sidebar-nav-item.active { background: rgba(255,255,255,0.1); }
+  .sidebar-nav-item .s-icon { font-size: 20px; }
+  .sidebar-nav-item .s-label { font-size: 14px; color: rgba(255,255,255,0.45); font-weight: 500; }
+  .sidebar-nav-item.active .s-label { color: #fff; font-weight: 600; }
+
+  .app {
+    transition: margin-left 0.25s ease, width 0.25s ease;
+    margin-left: 240px !important;
+    width: calc(100% - 240px) !important;
+    max-width: none !important;
+    padding-bottom: 0 !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    overflow-y: auto !important;
+  }
+
+  .app.sidebar-hidden {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  .bottom-nav { display: none !important; }
+  .brand-row { display: none !important; }
+  .topbar { position: sticky !important; top: 0 !important; z-index: 50 !important; }
+}
+
+/* Desktop hidden by default on mobile */
+.desktop-sidebar { display: none; }
+

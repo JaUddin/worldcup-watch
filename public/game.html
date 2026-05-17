@@ -2552,8 +2552,9 @@ $('start-btn').addEventListener('click', e => {
 <script>
 // ── MOBILE TOUCH CONTROLS ─────────────────────────
 (function() {
-  // Only activate on touch devices
+  // Only activate on mobile touch devices
   if (!('ontouchstart' in window)) return;
+  if (window.innerWidth >= 900) return;
 
   const held = new Set();
 

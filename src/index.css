@@ -27,6 +27,7 @@
   --footer-bg:     #fafaf9;
   --reaction-bg:   #f5f5f3;
   --tag-bg:        #f0f0ee;
+  --sidebar-w:     240px;
 }
 
 /* ── DARK THEME ── */
@@ -66,7 +67,7 @@ body {
   min-height: 100dvh;
 }
 
-/* MOBILE: original centered narrow column */
+/* ── MOBILE: narrow centered column ── */
 #root {
   width: 100%;
   max-width: 480px;
@@ -77,89 +78,129 @@ body {
   transition: background 0.3s;
 }
 
-/* DESKTOP: full width with sidebar */
+/* ── DESKTOP ── */
 @media (min-width: 900px) {
   body { background: #0a1f0d; }
 
   #root {
     max-width: 100%;
     width: 100%;
-    display: grid;
-    grid-template-columns: 240px 1fr;
+    display: flex;
     min-height: 100vh;
     min-height: 100dvh;
     overflow: hidden;
   }
 
-.app {
-  grid-column: 2;
-  width: 100% !important;
-  max-width: 100% !important;
-  padding-bottom: 0 !important;
-  height: 100vh !important;
-  height: 100dvh !important;
-  overflow-y: auto !important;
-}
-
   /* Sidebar */
-  .bottom-nav {
-    position: fixed !important;
-    left: 0 !important; top: 0 !important; bottom: 0 !important;
-    width: 240px !important;
-    max-width: 240px !important;
-    height: 100vh !important;
-    flex-direction: column !important;
-    border-top: none !important;
-    border-right: 1px solid rgba(255,255,255,0.06) !important;
-    background: #0a1f0d !important;
-    padding: 20px 0 !important;
-    justify-content: flex-start !important;
-    gap: 2px !important;
-    z-index: 100 !important;
-    backdrop-filter: none !important;
+  .desktop-sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: #0a1f0d;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 200;
+    transition: width 0.25s ease, opacity 0.25s ease;
+    overflow: hidden;
   }
 
-  .bottom-nav::before {
-    content: '⚽  Kickoff NYC';
-    display: block;
-    color: #fff;
-    font-size: 17px;
-    font-weight: 600;
-    padding: 0 20px 18px;
+  .desktop-sidebar.collapsed {
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .sidebar-brand {
+    padding: 20px 20px 16px;
     border-bottom: 1px solid rgba(255,255,255,0.07);
-    margin-bottom: 10px;
-    letter-spacing: -0.3px;
-    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
-  .nav-item {
-    flex: none !important;
-    padding: 11px 20px !important;
-    text-align: left !important;
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 12px !important;
-    border-radius: 10px !important;
-    margin: 0 10px !important;
-    width: calc(100% - 20px) !important;
+  .sidebar-brand-icon { font-size: 26px; }
+  .sidebar-brand-text { color: #fff; font-size: 17px; font-weight: 600; letter-spacing: -0.3px; white-space: nowrap; }
+
+  .sidebar-nav { padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+
+  .sidebar-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
   }
 
-  .nav-item::before { display: none !important; }
-  .nav-item.active { background: rgba(255,255,255,0.09) !important; }
+  .sidebar-nav-item:hover { background: rgba(255,255,255,0.06); }
+  .sidebar-nav-item.active { background: rgba(255,255,255,0.1); }
+  .sidebar-nav-item .s-icon { font-size: 20px; flex-shrink: 0; }
+  .sidebar-nav-item .s-label { font-size: 14px; color: rgba(255,255,255,0.45); font-weight: 500; }
+  .sidebar-nav-item.active .s-label { color: #fff; font-weight: 600; }
 
-  .nav-icon { font-size: 20px !important; margin-bottom: 0 !important; }
-
-  .nav-label {
-    font-size: 14px !important;
-    font-weight: 500 !important;
-    color: rgba(255,255,255,0.45) !important;
-    display: block !important;
+  /* Toggle button */
+  .sidebar-toggle {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 300;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+    backdrop-filter: blur(8px);
   }
 
-  .nav-item.active .nav-label { color: #fff !important; font-weight: 600 !important; }
-  .nav-item.active .nav-icon { transform: scale(1.1) !important; }
+  .sidebar-toggle:hover { background: rgba(255,255,255,0.18); }
 
+  /* Main content shifts with sidebar */
+  .app {
+    margin-left: var(--sidebar-w);
+    width: calc(100% - var(--sidebar-w));
+    max-width: none !important;
+    padding-bottom: 0 !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    overflow-y: auto !important;
+    transition: margin-left 0.25s ease, width 0.25s ease;
+    flex: 1;
+  }
+
+  .app.sidebar-hidden {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  /* Hide mobile nav on desktop */
+  .bottom-nav { display: none !important; }
+
+  /* Hide mobile brand */
   .brand-row { display: none !important; }
+
+  /* Topbar full width */
   .topbar { position: sticky !important; top: 0 !important; z-index: 50 !important; }
+
+  /* Play tab: hide topbar search/tabs, show full game */
+  .app.playing .topbar .search-wrap,
+  .app.playing .topbar .tabs,
+  .app.playing .topbar .topbar-row { display: none !important; }
+
+  /* Play tab full height */
+  .app.playing { overflow: hidden !important; }
+  .app.playing .play-tab { height: 100vh !important; height: 100dvh !important; }
 }
