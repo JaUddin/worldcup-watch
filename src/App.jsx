@@ -532,16 +532,21 @@ const toggleTheme = () => setIsDark(d => !d)
         <div className="play-title">⚽ El Camino</div>
         <div className="play-sub">Road to Mexico 2026 — kill time before the match</div>
       </div>
-      <button
-        className="play-fullscreen-btn"
-        onClick={() => {
-          const iframe = document.querySelector('.play-frame')
-          if (iframe?.requestFullscreen) iframe.requestFullscreen()
-          else if (iframe?.webkitRequestFullscreen) iframe.webkitRequestFullscreen()
-        }}
-      >
-        ⛶ Full screen
-      </button>
+  <button
+  className="play-fullscreen-btn"
+  onClick={() => {
+    const wrap = document.querySelector('.play-frame-wrap')
+    const iframe = document.querySelector('.play-frame')
+    const el = wrap || iframe
+    if (el?.requestFullscreen) el.requestFullscreen()
+    else if (el?.webkitRequestFullscreen) el.webkitRequestFullscreen()
+    else if (iframe?.contentWindow?.document?.documentElement?.requestFullscreen) {
+      iframe.contentWindow.document.documentElement.requestFullscreen()
+    }
+  }}
+>
+  ⛶ Full screen
+</button>
     </div>
     <div className="play-frame-wrap">
       <iframe

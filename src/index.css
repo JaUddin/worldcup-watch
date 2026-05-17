@@ -91,14 +91,15 @@ body {
     overflow: hidden;
   }
 
-  .app {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding-bottom: 0 !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    overflow-y: auto !important;
-  }
+.app {
+  grid-column: 2;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding-bottom: 0 !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  overflow-y: auto !important;
+}
 
   /* Sidebar */
   .bottom-nav {
