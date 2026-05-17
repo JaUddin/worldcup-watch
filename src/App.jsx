@@ -308,24 +308,32 @@ const toggleTheme = () => setIsDark(d => !d)
       <button className="signout-btn" onClick={logOut}>Sign out</button>
     </div>
   </div>
-        {tab === 'discover' && (
-          <div style={{ marginBottom: 12 }}>
-            <MatchCountdown />
-          </div>
-        )}
-        <div className="search-wrap">
-          <span className="search-icon">⌕</span>
-          <input type="text" placeholder="Search bars, neighborhoods, teams..."
-            value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1) }} />
-        </div>
-        <div className="tabs">
-          {['discover', 'schedule', 'host', 'profile'].map(t => (
-            <div key={t} className={`tab ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
-              {t.charAt(0).toUpperCase() + t.slice(1)}
-            </div>
-          ))}
-        </div>
+
+  {tab === 'discover' && (
+    <div style={{ marginBottom: 12 }}>
+      <MatchCountdown />
+    </div>
+  )}
+
+  <div className="search-wrap">
+    <span className="search-icon">⌕</span>
+    <input
+      type="text"
+      placeholder="Search bars, neighborhoods, teams..."
+      value={search}
+      onChange={e => { setSearch(e.target.value); setCurrentPage(1) }}
+    />
+  </div>
+
+  <div className="tabs">
+    {['discover', 'schedule', 'host', 'profile'].map(t => (
+      <div key={t} className={`tab ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
+        {t.charAt(0).toUpperCase() + t.slice(1)}
       </div>
+    ))}
+  </div>
+</div>
+
 
       {toast && <div className="toast show">{toast}</div>}
 

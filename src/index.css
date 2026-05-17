@@ -27,7 +27,6 @@
   --footer-bg:     #fafaf9;
   --reaction-bg:   #f5f5f3;
   --tag-bg:        #f0f0ee;
-  --app-max-width: 480px;
 }
 
 /* ── DARK THEME ── */
@@ -67,130 +66,99 @@ body {
   min-height: 100dvh;
 }
 
-/* ── MOBILE: centered column ── */
+/* MOBILE: original centered narrow column */
 #root {
   width: 100%;
-  max-width: var(--app-max-width);
+  max-width: 480px;
   margin: 0 auto;
   background: var(--bg-surface);
   min-height: 100vh;
   min-height: 100dvh;
   transition: background 0.3s;
-  position: relative;
 }
 
-/* ── DESKTOP: full width with sidebar ── */
+/* DESKTOP: full width with sidebar */
 @media (min-width: 900px) {
+  body { background: #0a1f0d; }
+
   #root {
     max-width: 100%;
     width: 100%;
-    display: block;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
   }
 
   .app {
-    max-width: 100% !important;
     width: 100% !important;
-    padding-bottom: 0 !important;
-  }
-
-  .bottom-nav {
     max-width: 100% !important;
-    width: 100% !important;
-  }
-}
-  /* Sidebar nav on desktop */
-  .bottom-nav {
-    position: fixed !important;
-    left: 0 !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    width: 260px !important;
-    max-width: 260px !important;
-    flex-direction: column !important;
-    border-top: none !important;
-    border-right: 1px solid rgba(255,255,255,0.06) !important;
-    background: #0a1f0d !important;
-    padding: 24px 0 24px !important;
-    justify-content: flex-start !important;
-    gap: 4px !important;
-    z-index: 100 !important;
-  }
-
-  .nav-item {
-    flex: none !important;
-    padding: 12px 24px !important;
-    text-align: left !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 14px !important;
-    border-radius: 12px !important;
-    margin: 0 12px !important;
-    width: calc(100% - 24px) !important;
-  }
-
-  .nav-item.active::before { display: none !important; }
-
-  .nav-item.active {
-    background: rgba(255,255,255,0.08) !important;
-  }
-
-  .nav-icon {
-    font-size: 22px !important;
-    margin-bottom: 0 !important;
-  }
-
-  .nav-label {
-    font-size: 14px !important;
-    font-weight: 500 !important;
-    color: rgba(255,255,255,0.5) !important;
-  }
-
-  .nav-item.active .nav-label {
-    color: #fff !important;
-    font-weight: 600 !important;
-  }
-
-  /* Desktop brand block at top of sidebar */
-  .bottom-nav::before {
-    content: '⚽  Kickoff NYC';
-    display: block;
-    color: #fff;
-    font-size: 18px;
-    font-weight: 600;
-    padding: 0 24px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
-    margin-bottom: 12px;
-    letter-spacing: -0.3px;
-    font-family: 'DM Sans', sans-serif;
-  }
-
-  /* Main content area */
-  .app {
-    margin-left: 260px !important;
     padding-bottom: 0 !important;
     height: 100vh !important;
     height: 100dvh !important;
     overflow-y: auto !important;
-    width: calc(100vw - 260px) !important;
-    max-width: calc(100vw - 260px) !important;
   }
 
-  /* Hide topbar brand on desktop since sidebar shows it */
+  /* Sidebar */
+  .bottom-nav {
+    position: fixed !important;
+    left: 0 !important; top: 0 !important; bottom: 0 !important;
+    width: 240px !important;
+    max-width: 240px !important;
+    height: 100vh !important;
+    flex-direction: column !important;
+    border-top: none !important;
+    border-right: 1px solid rgba(255,255,255,0.06) !important;
+    background: #0a1f0d !important;
+    padding: 20px 0 !important;
+    justify-content: flex-start !important;
+    gap: 2px !important;
+    z-index: 100 !important;
+    backdrop-filter: none !important;
+  }
+
+  .bottom-nav::before {
+    content: '⚽  Kickoff NYC';
+    display: block;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+    padding: 0 20px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    margin-bottom: 10px;
+    letter-spacing: -0.3px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .nav-item {
+    flex: none !important;
+    padding: 11px 20px !important;
+    text-align: left !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 12px !important;
+    border-radius: 10px !important;
+    margin: 0 10px !important;
+    width: calc(100% - 20px) !important;
+  }
+
+  .nav-item::before { display: none !important; }
+  .nav-item.active { background: rgba(255,255,255,0.09) !important; }
+
+  .nav-icon { font-size: 20px !important; margin-bottom: 0 !important; }
+
+  .nav-label {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: rgba(255,255,255,0.45) !important;
+    display: block !important;
+  }
+
+  .nav-item.active .nav-label { color: #fff !important; font-weight: 600 !important; }
+  .nav-item.active .nav-icon { transform: scale(1.1) !important; }
+
   .brand-row { display: none !important; }
-
-  /* Wider topbar */
-  .topbar {
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 50 !important;
-  }
-
-  /* Cards in a grid on wide screens */
-  @media (min-width: 1200px) {
-    .tab-content > .bar-card {
-      display: inline-block;
-      width: calc(50% - 24px);
-      vertical-align: top;
-    }
-  }
-
+  .topbar { position: sticky !important; top: 0 !important; z-index: 50 !important; }
+}

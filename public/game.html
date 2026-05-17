@@ -82,23 +82,7 @@ canvas{display:block;}
 #toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--yellow);color:#000;font-family:var(--font-title);font-size:20px;letter-spacing:2px;padding:10px 28px;border-radius:36px;z-index:999;pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap;}
 #toast.show{opacity:1;}
 
-/* KICKOFF NYC CROSSOVER */
-#kickoff-banner{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(10,31,13,0.92);border:2px solid #1a3d1a;border-radius:16px;padding:12px 20px;display:flex;align-items:center;gap:12px;z-index:10;cursor:pointer;transition:all 0.2s;max-width:340px;width:90%;backdrop-filter:blur(8px);}
-#kickoff-banner:hover{border-color:#c8a415;transform:translateX(-50%) translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.4);}
-.kb-icon{font-size:28px;flex-shrink:0;}
-.kb-text{flex:1;}
-.kb-title{font-family:'Bangers',cursive;font-size:16px;color:#c8a415;letter-spacing:2px;margin-bottom:2px;}
-.kb-sub{font-size:11px;color:rgba(255,255,255,0.6);line-height:1.4;}
-.kb-arrow{font-size:18px;color:#c8a415;flex-shrink:0;}
 
-#kickoff-ending{display:none;margin:16px auto 0;background:linear-gradient(135deg,#0a1f0d 0%,#1a3d1a 100%);border:2px solid #c8a415;border-radius:16px;padding:16px 20px;max-width:420px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
-#kickoff-ending::before{content:'⚽';position:absolute;right:-8px;bottom:-8px;font-size:72px;opacity:0.06;}
-#kickoff-ending:hover{border-color:#fff;transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,164,21,0.2);}
-.ke-badge{display:inline-block;background:#c8a415;color:#000;font-family:'Bangers',cursive;font-size:12px;letter-spacing:2px;padding:3px 10px;border-radius:20px;margin-bottom:8px;}
-.ke-title{font-family:'Bangers',cursive;font-size:22px;color:#fff;letter-spacing:2px;margin-bottom:6px;}
-.ke-desc{font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5;margin-bottom:12px;}
-.ke-btn{display:inline-block;background:#c8a415;color:#000;font-family:'Bangers',cursive;font-size:16px;letter-spacing:2px;padding:8px 24px;border-radius:24px;border:none;cursor:pointer;transition:opacity 0.2s;}
-.ke-btn:hover{opacity:0.9;}
 .ke-features{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
 .ke-feature{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);font-size:11px;padding:4px 10px;border-radius:20px;}
 
@@ -162,7 +146,7 @@ canvas{display:block;}
 }
 
 /* Hide on desktop */
-@media (min-width: 900px) {
+@media (min-width: 1025px) and (orientation: landscape) {
   #touch-controls { display: none !important; }
   #game { width: 100vw !important; height: 100vh !important; }
 }
@@ -274,18 +258,7 @@ canvas{display:block;}
   <div class="t-world">⚽ FIFA WORLD CUP 2026 ⚽</div>
   <button class="t-btn" id="start-btn">¡KICK OFF!</button>
   <div class="t-player">🧑</div>
-  <div class="t-ground"></div>
-
-  <!-- Kickoff NYC crossover banner -->
-  <div id="kickoff-banner" onclick="window.open('https://worldcup-watch-t1s8.vercel.app','_blank')" title="Find your watch party">
-    <div class="kb-icon">📍</div>
-    <div class="kb-text">
-      <div class="kb-title">KICKOFF NYC</div>
-      <div class="kb-sub">Find real World Cup 2026 watch parties across NYC</div>
-    </div>
-    <div class="kb-arrow">→</div>
-  </div>
-</div>
+  <div class="t-ground"></div></div>
 
 <div id="scr-story" class="screen">
   <canvas id="s-canvas"></canvas>
@@ -1372,7 +1345,7 @@ function doEnding() {
   $('r-emoji').textContent='🏆🇲🇽🏆';
   $('r-title').textContent='¡CAMPEÓN!';$('r-title').style.color='#f5c518';
   $('r-score').textContent='⭐⭐⭐ WORLD CUP WINNER ⭐⭐⭐';
-  $('r-msg').innerHTML='<strong style="color:#f5c518">From a dusty alley in Oaxaca to the Estadio Azteca.</strong><br><br>You are Miguel Reyes. Number 10. Mexico\'s hero. The 2026 FIFA World Cup Champion.<br><br>🌮 Abuela is watching. The whole country is watching. You did it.<br><br><span style="color:#f5c518;font-weight:700">¡VIVA MÉXICO! 🇲🇽⚽🏆</span><div id="kickoff-ending" onclick="window.open(\'https://worldcup-watch-t1s8.vercel.app\',\'_blank\')"><div class="ke-badge">⚽ REAL WORLD CUP 2026</div><div class="ke-title">Now Watch It For Real</div><div class="ke-desc">You lived the dream as Miguel. Now find your crew for the actual World Cup 2026 — 8 matches at MetLife Stadium, right here in NYC.</div><div class="ke-features"><span class="ke-feature">📍 12 verified bars</span><span class="ke-feature">🔴 Live check-ins</span><span class="ke-feature">👥 Watch party groups</span><span class="ke-feature">🗺 Directions</span></div><button class="ke-btn">Find My Watch Party →</button></div>';
+  $('r-msg').innerHTML='<strong style="color:#f5c518">From a dusty alley in Oaxaca to the Estadio Azteca.</strong><br><br>You are Miguel Reyes. Number 10. Mexico\'s hero. The 2026 FIFA World Cup Champion.<br><br>🌮 Abuela is watching. The whole country is watching. You did it.<br><br><span style="color:#f5c518;font-weight:700">¡VIVA MÉXICO! 🇲🇽⚽🏆</span><div id="kickoff-ending" style="display:none" onclick="window.open(\'https://worldcup-watch-t1s8.vercel.app\',\'_blank\')"><div class="ke-badge">⚽ REAL WORLD CUP 2026</div><div class="ke-title">Now Watch It For Real</div><div class="ke-desc">You lived the dream as Miguel. Now find your crew for the actual World Cup 2026 — 8 matches at MetLife Stadium, right here in NYC.</div><div class="ke-features"><span class="ke-feature">📍 12 verified bars</span><span class="ke-feature">🔴 Live check-ins</span><span class="ke-feature">👥 Watch party groups</span><span class="ke-feature">🗺 Directions</span></div><button class="ke-btn">Find My Watch Party →</button></div>';
   $('r-stars').innerHTML='🌟🌟🌟🌟🌟';
   $('r-retry').style.display='none';$('r-cont').textContent='PLAY AGAIN ↺';
   $('r-cont').onclick=()=>startGame();
