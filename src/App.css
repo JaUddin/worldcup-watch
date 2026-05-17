@@ -387,6 +387,7 @@
   position: relative;
   background: #000;
   overflow: hidden;
+  width: 100%;
 }
 
 .play-frame {
@@ -394,6 +395,8 @@
   height: 100%;
   border: none;
   display: block;
+  position: absolute;
+  inset: 0;
 }
 
 /* Desktop: play tab fills the full content area */

@@ -81,20 +81,23 @@ body {
 
 /* ── DESKTOP: full width with sidebar ── */
 @media (min-width: 900px) {
-  :root { --app-max-width: 100%; }
-
-  body {
-    background: #0a1f0d;
-  }
-
   #root {
     max-width: 100%;
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    grid-template-rows: 100vh;
-    overflow: hidden;
+    width: 100%;
+    display: block;
   }
 
+  .app {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-bottom: 0 !important;
+  }
+
+  .bottom-nav {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
   /* Sidebar nav on desktop */
   .bottom-nav {
     position: fixed !important;
