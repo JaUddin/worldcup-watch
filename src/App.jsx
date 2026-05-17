@@ -30,7 +30,6 @@ import { BARS, TEAMS, GROUP_MATCHES, TEAM_COLORS } from './data'
 import './App.css'
 
 const PER_PAGE = 5
-const ONBOARDING_KEY = 'kickoff_nyc_onboarded'
 
 export default function App() {
   const { user, loading } = useAuth()
@@ -59,6 +58,7 @@ function MainApp() {
   const navigate = useNavigate()
 
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const [tab, setTab] = useState('discover')
   const [search, setSearch] = useState('')
   const [teamFilter, setTeamFilter] = useState('')
@@ -86,22 +86,24 @@ function MainApp() {
   const [profileDropdownSearch, setProfileDropdownSearch] = useState('')
   const [profileSaving, setProfileSaving] = useState(false)
   const [toast, setToast] = useState('')
+  const [isDark, setIsDark] = useState(() => localStorage.getItem('kickoff_theme') === 'dark')
 
   const dropdownRef = useRef(null)
   const profileDropdownRef = useRef(null)
   const newUserTracked = useRef(false)
 
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  useEffect(() => {
+    if (user) setShowOnboarding(true)
+  }, [user])
 
- useEffect(() => {
-  if (user) {
-    setShowOnboarding(true)
-  }
-}, [user])
+  const completeOnboarding = () => setShowOnboarding(false)
 
-const completeOnboarding = () => {
-  setShowOnboarding(false)
-}
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
+    localStorage.setItem('kickoff_theme', isDark ? 'dark' : 'light')
+  }, [isDark])
+
+  const toggleTheme = () => setIsDark(d => !d)
 
   useEffect(() => {
     if (!user?.uid) return
@@ -163,15 +165,6 @@ const completeOnboarding = () => {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
-
-  const [isDark, setIsDark] = useState(() => localStorage.getItem('kickoff_theme') === 'dark')
-
-useEffect(() => {
-  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
-  localStorage.setItem('kickoff_theme', isDark ? 'dark' : 'light')
-}, [isDark])
-
-const toggleTheme = () => setIsDark(d => !d)
 
   const allBars = [
     ...BARS,
@@ -291,7 +284,7 @@ const toggleTheme = () => setIsDark(d => !d)
   const filteredProfileTeams = TEAMS.filter(t => t.name.toLowerCase().includes(profileDropdownSearch.toLowerCase()))
   const totalCheckedIn = Object.values(checkins).reduce((s, a) => s + a.length, 0)
 
-return (
+  return (
     <div className="app-shell">
 
       {/* ── DESKTOP SIDEBAR ── */}
@@ -306,9 +299,13 @@ return (
             { id: 'schedule', icon: '📅', label: 'Schedule' },
             { id: 'play',     icon: '⚽',  label: 'Play' },
             { id: 'host',     icon: '＋',  label: 'Host' },
-            { id: 'profile',  icon: '👤', label: 'Profile' },
+            { id: 'profile',  icon: '👤',  label: 'Profile' },
           ].map(n => (
-            <div key={n.id} className={`sidebar-nav-item ${tab === n.id ? 'active' : ''}`} onClick={() => setTab(n.id)}>
+            <div
+              key={n.id}
+              className={`sidebar-nav-item ${tab === n.id ? 'active' : ''}`}
+              onClick={() => setTab(n.id)}
+            >
               <span className="s-icon">{n.icon}</span>
               <span className="s-label">{n.label}</span>
             </div>
@@ -316,7 +313,7 @@ return (
         </div>
       </div>
 
-      {/* Sidebar toggle — desktop only */}
+      {/* ── SIDEBAR TOGGLE — desktop only ── */}
       <button className="sidebar-toggle" onClick={() => setSidebarOpen(o => !o)}>
         {sidebarOpen ? '←' : '☰'}
       </button>
@@ -325,7 +322,8 @@ return (
 
       <div className={`app ${!sidebarOpen ? 'sidebar-hidden' : ''}`}>
 
-        <div className="topbar">
+        {/* ── TOPBAR ── */}
+        <div className={`topbar ${tab === 'play' ? 'topbar-play-mode' : ''}`}>
           <div className="topbar-row">
             <div className="brand-row">
               <span className="brand-icon">⚽</span>
@@ -342,25 +340,37 @@ return (
             </div>
           </div>
 
-          {tab === 'discover' && (
+          {tab !== 'play' && tab === 'discover' && (
             <div style={{ marginBottom: 12 }}>
               <MatchCountdown />
             </div>
           )}
 
-          <div className="search-wrap">
-            <span className="search-icon">⌕</span>
-            <input type="text" placeholder="Search bars, neighborhoods, teams..."
-              value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1) }} />
-          </div>
+          {tab !== 'play' && (
+            <div className="search-wrap">
+              <span className="search-icon">⌕</span>
+              <input
+                type="text"
+                placeholder="Search bars, neighborhoods, teams..."
+                value={search}
+                onChange={e => { setSearch(e.target.value); setCurrentPage(1) }}
+              />
+            </div>
+          )}
 
-          <div className="tabs">
-            {['discover', 'schedule', 'host', 'profile'].map(t => (
-              <div key={t} className={`tab ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
-                {t.charAt(0).toUpperCase() + t.slice(1)}
-              </div>
-            ))}
-          </div>
+          {tab !== 'play' && (
+            <div className="tabs">
+              {['discover', 'schedule', 'host', 'profile'].map(t => (
+                <div
+                  key={t}
+                  className={`tab ${tab === t ? 'active' : ''}`}
+                  onClick={() => setTab(t)}
+                >
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {toast && <div className="toast show">{toast}</div>}
@@ -368,6 +378,18 @@ return (
         {/* ── DISCOVER ── */}
         {tab === 'discover' && (
           <div className="tab-content">
+
+            <div className="discover-hero">
+              <div className="discover-hero-left">
+                <div className="discover-hero-title">⚽ Kickoff NYC</div>
+                <div className="discover-hero-sub">World Cup 2026 Watch Parties · New York City</div>
+              </div>
+              <div className="discover-hero-badge">
+                <span className="discover-hero-dot" />
+                Live
+              </div>
+            </div>
+
             <div className="app-stats-row">
               <div className="app-stat">
                 <div className="app-stat-num">{appStats.totalRsvps || 0}</div>
@@ -415,12 +437,19 @@ return (
                 {pageBars.map(b => {
                   const tc = TEAM_COLORS[b.team] || TEAM_COLORS.Open
                   return (
-                    <BarCard key={b.name} bar={{ ...b, teamColor: tc }}
+                    <BarCard
+                      key={b.name}
+                      bar={{ ...b, teamColor: tc }}
                       rsvpCount={venueCounts[b.name] || 0}
-                      checkins={checkins} isGoing={hasBarRsvp(b.name)}
-                      onToggleRsvp={toggleBarRsvp} onCheckIn={handleCheckIn} onCheckOut={handleCheckOut}
-                      venueReactions={venueReactions} userReactions={userReactions}
-                      claimedVenues={claimedVenues} onNavigate={navigate}
+                      checkins={checkins}
+                      isGoing={hasBarRsvp(b.name)}
+                      onToggleRsvp={toggleBarRsvp}
+                      onCheckIn={handleCheckIn}
+                      onCheckOut={handleCheckOut}
+                      venueReactions={venueReactions}
+                      userReactions={userReactions}
+                      claimedVenues={claimedVenues}
+                      onNavigate={navigate}
                     />
                   )
                 })}
@@ -473,14 +502,26 @@ return (
               )}
               {rsvpBars.map(r => (
                 <div key={r.id} className="rsvp-pill">
-                  <div><div className="rsvp-pill-name">{r.targetName}</div><div className="rsvp-pill-sub">Venue</div></div>
-                  <button className="undo-btn" onClick={async () => { await removeRsvp(r.id, 'bar', r.targetName); setRsvpBars(prev => prev.filter(x => x.id !== r.id)) }}>Undo</button>
+                  <div>
+                    <div className="rsvp-pill-name">{r.targetName}</div>
+                    <div className="rsvp-pill-sub">Venue</div>
+                  </div>
+                  <button className="undo-btn" onClick={async () => {
+                    await removeRsvp(r.id, 'bar', r.targetName)
+                    setRsvpBars(prev => prev.filter(x => x.id !== r.id))
+                  }}>Undo</button>
                 </div>
               ))}
               {rsvpMatches.map(r => (
                 <div key={r.id} className="rsvp-pill">
-                  <div><div className="rsvp-pill-name">{r.targetName}</div><div className="rsvp-pill-sub">Match</div></div>
-                  <button className="undo-btn" onClick={async () => { await removeRsvp(r.id, 'match', r.targetName); setRsvpMatches(prev => prev.filter(x => x.id !== r.id)) }}>Undo</button>
+                  <div>
+                    <div className="rsvp-pill-name">{r.targetName}</div>
+                    <div className="rsvp-pill-sub">Match</div>
+                  </div>
+                  <button className="undo-btn" onClick={async () => {
+                    await removeRsvp(r.id, 'match', r.targetName)
+                    setRsvpMatches(prev => prev.filter(x => x.id !== r.id))
+                  }}>Undo</button>
                 </div>
               ))}
             </div>
@@ -500,15 +541,28 @@ return (
               {dropdownOpen && (
                 <div className="dropdown-list">
                   <div className="dropdown-search">
-                    <input autoFocus type="text" placeholder="Search countries..." value={dropdownSearch}
-                      onChange={e => setDropdownSearch(e.target.value)} onClick={e => e.stopPropagation()} />
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="Search countries..."
+                      value={dropdownSearch}
+                      onChange={e => setDropdownSearch(e.target.value)}
+                      onClick={e => e.stopPropagation()}
+                    />
                   </div>
                   <div className="dropdown-items">
                     {filteredTeams.length === 0 && <div className="dropdown-empty">No results</div>}
                     {filteredTeams.map(t => (
-                      <div key={t.name} className="dropdown-item" onClick={() => { setSelectedSchedTeam(t.name); setDropdownOpen(false); setDropdownSearch('') }}>
+                      <div key={t.name} className="dropdown-item" onClick={() => {
+                        setSelectedSchedTeam(t.name)
+                        setDropdownOpen(false)
+                        setDropdownSearch('')
+                      }}>
                         <span className="di-flag">{t.flag}</span>
-                        <div><div className="di-name">{t.name}</div><div className="di-conf">{t.conf}</div></div>
+                        <div>
+                          <div className="di-name">{t.name}</div>
+                          <div className="di-conf">{t.conf}</div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -551,7 +605,7 @@ return (
         )}
 
         {/* ── PLAY ── */}
-       {tab === 'play' && <PlayTab />}
+        {tab === 'play' && <PlayTab />}
 
         {/* ── HOST ── */}
         {tab === 'host' && (
@@ -641,17 +695,27 @@ return (
                 {profileDropdownOpen && (
                   <div className="dropdown-list">
                     <div className="dropdown-search">
-                      <input autoFocus type="text" placeholder="Search countries..." value={profileDropdownSearch}
-                        onChange={e => setProfileDropdownSearch(e.target.value)} onClick={e => e.stopPropagation()} />
+                      <input
+                        autoFocus
+                        type="text"
+                        placeholder="Search countries..."
+                        value={profileDropdownSearch}
+                        onChange={e => setProfileDropdownSearch(e.target.value)}
+                        onClick={e => e.stopPropagation()}
+                      />
                     </div>
                     <div className="dropdown-items">
                       {filteredProfileTeams.map(t => (
                         <div key={t.name} className="dropdown-item" onClick={() => {
                           if (!teamPrefs.includes(t.name)) setTeamPrefs(p => [...p, t.name])
-                          setProfileDropdownOpen(false); setProfileDropdownSearch('')
+                          setProfileDropdownOpen(false)
+                          setProfileDropdownSearch('')
                         }}>
                           <span className="di-flag">{t.flag}</span>
-                          <div><div className="di-name">{t.name}</div><div className="di-conf">{t.conf}</div></div>
+                          <div>
+                            <div className="di-name">{t.name}</div>
+                            <div className="di-conf">{t.conf}</div>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -700,7 +764,7 @@ return (
             { id: 'schedule', icon: '📅', label: 'Schedule' },
             { id: 'play',     icon: '⚽',  label: 'Play' },
             { id: 'host',     icon: '＋',  label: 'Host' },
-            { id: 'profile',  icon: '👤', label: 'Profile' },
+            { id: 'profile',  icon: '👤',  label: 'Profile' },
           ].map(n => (
             <div key={n.id} className={`nav-item ${tab === n.id ? 'active' : ''}`} onClick={() => setTab(n.id)}>
               <div className="nav-icon">{n.icon}</div>

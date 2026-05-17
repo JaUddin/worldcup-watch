@@ -506,3 +506,87 @@
 /* Desktop hidden by default on mobile */
 .desktop-sidebar { display: none; }
 
+/* ── DISCOVER HERO BANNER ── */
+.discover-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.discover-hero-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.4px;
+  margin-bottom: 3px;
+}
+
+.discover-hero-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.discover-hero-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(229,57,53,0.08);
+  border: 1px solid rgba(229,57,53,0.2);
+  color: #e53935;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.discover-hero-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e53935;
+  animation: pulse 1.5s infinite;
+  display: inline-block;
+}
+
+/* ── PLAY MODE TOPBAR — hide everything except hamburger + actions ── */
+.topbar-play-mode {
+  padding-bottom: 0 !important;
+}
+
+/* On desktop, hide entire topbar in play mode */
+@media (min-width: 900px) {
+  .topbar-play-mode .topbar-row {
+    display: none !important;
+  }
+
+  /* Play tab gets full height */
+  .app:has(.play-tab) {
+    overflow: hidden !important;
+  }
+}
+
+/* On mobile, topbar-play-mode just hides search and tabs */
+/* (search/tabs already hidden via tab !== 'play' conditional) */
+@media (max-width: 899px) {
+  .topbar-play-mode {
+    background: #0a1f0d;
+  }
+
+  /* Play tab height accounts for slim topbar + bottom nav */
+  .play-tab {
+    height: calc(100dvh - 108px) !important;
+  }
+}
+
+/* ── SIDEBAR always visible fix ── */
+@media (min-width: 900px) {
+  .desktop-sidebar {
+    background: #0a1f0d !important;
+  }
+}

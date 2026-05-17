@@ -1,30 +1,36 @@
-// src/components/PlayTab.jsx
-// Replace your inline play tab JSX with this component
-// Import it in App.jsx: import PlayTab from './components/PlayTab'
-
 import { useRef, useState, useEffect } from 'react'
 import './PlayTab.css'
 
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+const isAndroid = /Android/.test(navigator.userAgent)
+const isMobile = isIOS || isAndroid
+
 export default function PlayTab() {
-  const iframeRef = useRef(null)
   const wrapRef = useRef(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 
   useEffect(() => {
-    const onFsChange = () => {
+    const onChange = () => {
       const fsel = document.fullscreenElement || document.webkitFullscreenElement
       setIsFullscreen(!!fsel)
     }
-    document.addEventListener('fullscreenchange', onFsChange)
-    document.addEventListener('webkitfullscreenchange', onFsChange)
+    document.addEventListener('fullscreenchange', onChange)
+    document.addEventListener('webkitfullscreenchange', onChange)
     return () => {
-      document.removeEventListener('fullscreenchange', onFsChange)
-      document.removeEventListener('webkitfullscreenchange', onFsChange)
+      document.removeEventListener('fullscreenchange', onChange)
+      document.removeEventListener('webkitfullscreenchange', onChange)
     }
   }, [])
 
   const goFullscreen = async () => {
+    // iOS Safari: Fullscreen API not supported — open in new tab
+    // which Safari renders truly full screen automatically
+    if (isIOS) {
+      window.open('/game.html', '_blank')
+      return
+    }
+
+    // Android Chrome + Desktop: use Fullscreen API on the wrapper div
     const el = wrapRef.current
     if (!el) return
     try {
@@ -32,21 +38,19 @@ export default function PlayTab() {
       else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen()
       else if (el.mozRequestFullScreen) await el.mozRequestFullScreen()
     } catch (e) {
-      // iOS Safari fallback — open game in new tab
+      // Final fallback
       window.open('/game.html', '_blank')
     }
   }
 
-  const exitFullscreen = async () => {
-    try {
-      if (document.exitFullscreen) await document.exitFullscreen()
-      else if (document.webkitExitFullscreen) await document.webkitExitFullscreen()
-    } catch (e) {}
+  const exitFullscreen = () => {
+    if (document.exitFullscreen) document.exitFullscreen()
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen()
   }
 
   return (
     <div className="play-tab">
-      {/* Header — desktop only via CSS */}
+      {/* Header — desktop only (hidden on mobile via CSS) */}
       <div className="play-header">
         <div>
           <div className="play-title">⚽ El Camino</div>
@@ -57,10 +61,9 @@ export default function PlayTab() {
         </button>
       </div>
 
-      {/* Game wrapper */}
+      {/* Game frame */}
       <div className="play-frame-wrap" ref={wrapRef}>
         <iframe
-          ref={iframeRef}
           src="/game.html"
           className="play-frame"
           title="El Camino"
@@ -68,10 +71,10 @@ export default function PlayTab() {
           allow="fullscreen"
         />
 
-        {/* Mobile fullscreen button — floats over the game */}
+        {/* Mobile fullscreen button floats over game */}
         {isMobile && !isFullscreen && (
           <button className="play-mobile-fs-btn" onClick={goFullscreen}>
-            ⛶ Full screen
+            {isIOS ? '↗ Open full screen' : '⛶ Full screen'}
           </button>
         )}
       </div>
