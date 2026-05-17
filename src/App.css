@@ -590,3 +590,16 @@
     background: #0a1f0d !important;
   }
 }
+
+/* ── ADD TO BOTTOM OF src/App.css ── */
+
+/* Mobile Play tab: hide topbar + bottom nav so game is truly full screen */
+@media (max-width: 899px) {
+  .app.playing .topbar {
+    display: none !important;
+  }
+
+  .app.playing .bottom-nav {
+    display: none !important;
+  }
+}

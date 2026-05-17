@@ -1,69 +1,42 @@
-import { useRef, useState, useEffect } from 'react'
+import { useRef } from 'react'
 import './PlayTab.css'
 
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-const isAndroid = /Android/.test(navigator.userAgent)
-const isMobile = isIOS || isAndroid
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 
 export default function PlayTab() {
-  const wrapRef = useRef(null)
-  const [isFullscreen, setIsFullscreen] = useState(false)
+  const iframeRef = useRef(null)
 
-  useEffect(() => {
-    const onChange = () => {
-      const fsel = document.fullscreenElement || document.webkitFullscreenElement
-      setIsFullscreen(!!fsel)
-    }
-    document.addEventListener('fullscreenchange', onChange)
-    document.addEventListener('webkitfullscreenchange', onChange)
-    return () => {
-      document.removeEventListener('fullscreenchange', onChange)
-      document.removeEventListener('webkitfullscreenchange', onChange)
-    }
-  }, [])
-
+  // Desktop only — fullscreen button
   const goFullscreen = async () => {
-    // iOS Safari: Fullscreen API not supported — open in new tab
-    // which Safari renders truly full screen automatically
-    if (isIOS) {
-      window.open('/game.html', '_blank')
-      return
-    }
-
-    // Android Chrome + Desktop: use Fullscreen API on the wrapper div
-    const el = wrapRef.current
-    if (!el) return
+    const wrap = iframeRef.current?.parentElement
+    if (!wrap) return
     try {
-      if (el.requestFullscreen) await el.requestFullscreen()
-      else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen()
-      else if (el.mozRequestFullScreen) await el.mozRequestFullScreen()
+      if (wrap.requestFullscreen) await wrap.requestFullscreen()
+      else if (wrap.webkitRequestFullscreen) await wrap.webkitRequestFullscreen()
     } catch (e) {
-      // Final fallback
       window.open('/game.html', '_blank')
     }
-  }
-
-  const exitFullscreen = () => {
-    if (document.exitFullscreen) document.exitFullscreen()
-    else if (document.webkitExitFullscreen) document.webkitExitFullscreen()
   }
 
   return (
     <div className="play-tab">
-      {/* Header — desktop only (hidden on mobile via CSS) */}
-      <div className="play-header">
-        <div>
-          <div className="play-title">⚽ El Camino</div>
-          <div className="play-sub">Road to Mexico 2026 — kill time before the match</div>
+      {/* Desktop header only */}
+      {!isMobile && (
+        <div className="play-header">
+          <div>
+            <div className="play-title">⚽ El Camino</div>
+            <div className="play-sub">Road to Mexico 2026 — kill time before the match</div>
+          </div>
+          <button className="play-fullscreen-btn" onClick={goFullscreen}>
+            ⛶ Full screen
+          </button>
         </div>
-        <button className="play-fullscreen-btn" onClick={isFullscreen ? exitFullscreen : goFullscreen}>
-          {isFullscreen ? '✕ Exit' : '⛶ Full screen'}
-        </button>
-      </div>
+      )}
 
-      {/* Game frame */}
-      <div className="play-frame-wrap" ref={wrapRef}>
+      <div className="play-frame-wrap">
         <iframe
+          ref={iframeRef}
           src="/game.html"
           className="play-frame"
           title="El Camino"
@@ -71,12 +44,18 @@ export default function PlayTab() {
           allow="fullscreen"
         />
 
-        {/* Mobile fullscreen button floats over game */}
-        {isMobile && !isFullscreen && (
-          <button className="play-mobile-fs-btn" onClick={goFullscreen}>
-            {isIOS ? '↗ Open full screen' : '⛶ Full screen'}
-          </button>
-        )}
+        {/* Landscape blocker — mobile only */}
+        <div className="play-landscape-block">
+          <div className="play-landscape-msg">
+            <div style={{ fontSize: 48, marginBottom: 12 }}>📱</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#f5c518', marginBottom: 8 }}>
+              Keep it vertical
+            </div>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
+              El Camino plays best in portrait mode — like a Game Boy!
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
