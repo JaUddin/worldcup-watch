@@ -532,10 +532,7 @@ const toggleTheme = () => setIsDark(d => !d)
             />
           </div>
         </div>
-      )}
-
-      {/* ── HOST ── */}
-      {tab === 'host' && (
+      )} 
 
       {/* ── HOST ── */}
       {tab === 'host' && (
