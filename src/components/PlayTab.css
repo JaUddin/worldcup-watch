@@ -116,3 +116,23 @@
   .play-frame-wrap:fullscreen { width: 100vw; height: 100vh; }
   .play-frame-wrap:fullscreen .play-frame { width: 100%; height: 100%; }
 }
+.play-homescreen-tip {
+  position: fixed;
+  bottom: 168px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.75);
+  color: rgba(255,255,255,0.7);
+  font-size: 11px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  z-index: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: fadeout 4s forwards;
+  animation-delay: 3s;
+}
+
+@keyframes fadeout {
+  to { opacity: 0; }
+}
