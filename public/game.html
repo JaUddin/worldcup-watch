@@ -2670,6 +2670,17 @@ $('start-btn').addEventListener('click', e => {
   const controls = document.getElementById('touch-controls');
   if (controls) controls.style.display = 'none';
 })();
+
+// Resize canvas when orientation changes
+window.addEventListener('resize', () => {
+  const wrap = document.getElementById('g-wrap')
+  const canvas = document.getElementById('g-canvas')
+  if (wrap && canvas) {
+    canvas.width = wrap.clientWidth || window.innerWidth
+    canvas.height = (wrap.clientHeight || window.innerHeight) - 56
+  }
+})
+
 </script>
 
 </body>

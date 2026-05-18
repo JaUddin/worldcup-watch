@@ -320,7 +320,7 @@ function MainApp() {
 
       {showOnboarding && <Onboarding onComplete={completeOnboarding} />}
 
-      <div className={`app ${!sidebarOpen ? 'sidebar-hidden' : ''}`}>
+      <div className={`app ${!sidebarOpen ? 'sidebar-hidden' : ''} ${tab === 'play' ? 'playing' : ''}`}>
 
         {/* ── TOPBAR ── */}
         <div className={`topbar ${tab === 'play' ? 'topbar-play-mode' : ''}`}>
